@@ -12,13 +12,18 @@ const chatController=require('../controllers/chatmodule')
 const eventController=require('../controllers/event')
 const sosController=require('../controllers/sos')
 const weshareSchema=require('../controllers/weshare')
+
+
 //middlewares
+const {upload , compresssosProfileImg } = require('../middleware/s3Bucket')
 const { uploadProfile, compressProfileImg }=require('../middleware/uploadProfie')
 const {postUpload,compressedPostUpload}=require('../middleware/uploadPost');
 const {attachment,compressedattachment}=require('../middleware/uploadAttachment');
 const {attachments,compressedattachments}=require('../middleware/sos')
 const event = require('../models/event');
 const registrationcitizen = require('../models/registrationcitizen');
+
+
 //login module
 route.post('/registrationcitizen',regisController.registrationcitizen)
 route.post('/registrationleader',regisController.registrationleader)
@@ -26,6 +31,7 @@ route.post('/otpVerifycitizen',regisController.otpVerifycitizen)
 route.post('/otpVerifyleader',regisController.otpVerifyleader)
 route.post('/loginViaOtpcitizen',regisController.loginViaOtpcitizen)
 route.post('/loginViaOtpleader',regisController.loginViaOtpleader)
+// route.post('/loginViaOtpcounselling',regisController.loginViaOtpleader);
 route.post('/SplashScreen',regisController.SplashScreen)
 route.post('/logoutCheck',regisController.logoutCheck)
 route.post('/deeplink',authMiddleware,regisController.deeplink)
@@ -34,6 +40,19 @@ route.post('/findleaders',authMiddleware,regisController.findleaders)
 //profilecontroller
 route.put('/createProfileCitizen',authMiddleware,profileController.createProfileCitizen)
 route.put('/createProfileLeader',authMiddleware,profileController.createProfileLeader)
+route.put(
+    '/createProfileConselingWithSos', 
+    upload.fields([
+      { name: 'id_card.front', maxCount: 1 },
+      { name: 'id_card.back', maxCount: 1 },
+      { name: 'address_proof.front', maxCount: 1 },
+      { name: 'address_proof.back', maxCount: 1 },
+      { name: 'certificate_ngo_or_institute.front', maxCount: 1 },
+      { name: 'certificate_ngo_or_institute.back', maxCount: 1 },
+    ]),
+    compresssosProfileImg, // Middleware for compressing and uploading files to S3
+    profileController.createProfileConselingWithSos // Controller to handle profile creation
+  );
 route.put('/createProfileCitizenimg',authMiddleware,uploadProfile.single('profile_img'),compressProfileImg,profileController.createProfileCitizenimg)
 route.put('/createProfileLeaderimg',authMiddleware,uploadProfile.single('profile_img'),compressProfileImg,profileController.createProfileLeaderimg)
 route.put('/updateProfileCitizen',authMiddleware,profileController.updateProfileCitizen)
@@ -43,11 +62,10 @@ route.post('/getOtherprofile',authMiddleware,profileController.getOtherprofile)
 route.get('/getMyprofile/:_id',authMiddleware,profileController.getMyprofile)
 route.put('/updateProfileCitizenimg',authMiddleware,uploadProfile.single('profile_img'),compressProfileImg,profileController.updateProfileCitizenimg)
 route.put('/updateProfileLeaderimg',authMiddleware,uploadProfile.single('profile_img'),compressProfileImg,profileController.updateProfileLeaderimg)
-
 route.get('/getLanguages',authMiddleware,profileController.getLanguages)
 
 
-//connection module Starts 
+//connection module Starts
 route.post('/acceptRequest',authMiddleware,regisController.acceptRequest)
 route.post('/rejectRequest',authMiddleware,regisController.rejectRequest)
 route.get('/getNotification/:_id',authMiddleware,regisController.getNotification)
@@ -144,8 +162,6 @@ route.post('/addratingandreview',authMiddleware,sosController.addratingandreview
 route.get('/getratingsReview',authMiddleware,sosController.getratingsReview)
 route.post('/replyCommentsSos',authMiddleware,sosController.replyCommentsSos)
 route.get('/getAllratingsReview',authMiddleware,sosController.getAllratingsReview)
-
-
 //sos model Ends
 
 
