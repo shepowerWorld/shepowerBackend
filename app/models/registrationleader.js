@@ -304,8 +304,11 @@ const userSchema = new Schema(
         },
       },
 
-
-
+      sos_status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"], // Enum for admin status
+        default: "Pending", // Default status
+      },
 
     public: {
       type: Boolean,

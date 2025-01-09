@@ -465,6 +465,10 @@ exports.loginViaOtpleader = async (req, res) => {
   }
 };
 
+
+
+
+
 exports.loginViaOtpConselingWithSOS = async (req, res) => {
   try {
     const { mobilenumber, token } = req.body;
@@ -488,6 +492,17 @@ exports.loginViaOtpConselingWithSOS = async (req, res) => {
 
       if (profile && otp) {
         const response = await leaderUsermaster.findOne({ mobilenumber });
+    
+        if(response) {
+          if (response.sos_status === "Rejected" || response.sos_status === "Pending") {
+            return res.status(400).send({
+              Status: false,
+              message: "Your SOS status is not approved by admin",
+            });
+          }
+        };
+
+
 
         if (response) {
           const tokenPayload = generateUserTokenPayload(response);

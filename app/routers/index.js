@@ -31,7 +31,7 @@ route.post('/otpVerifycitizen',regisController.otpVerifycitizen)
 route.post('/otpVerifyleader',regisController.otpVerifyleader)
 route.post('/loginViaOtpcitizen',regisController.loginViaOtpcitizen)
 route.post('/loginViaOtpleader',regisController.loginViaOtpleader)
-// route.post('/loginViaOtpcounselling',regisController.loginViaOtpleader);
+route.post('/loginViaOtpcounselling',regisController.loginViaOtpConselingWithSOS);
 route.post('/SplashScreen',regisController.SplashScreen)
 route.post('/logoutCheck',regisController.logoutCheck)
 route.post('/deeplink',authMiddleware,regisController.deeplink)
@@ -271,29 +271,37 @@ route.post('/getAllPayments',authMiddleware,profileController.getAllPayments)
 //admin API STARTS
 route.post('/adminRegistration',adminController.adminRegistration);
 route.post('/adminLogin',adminController.adminLogin);
-route.get('/getAllUsers',authMiddleware,adminController.getAllUsers)
-route.post('/newusers',authMiddleware,adminController.newusers)
-route.get('/totalUsersCount',authMiddleware,adminController.totalUsersCount)
+route.post('/addgovscheme' , authMiddleware , adminController.createGovScheme);
+route.get('/getStateScheme', adminController.getAllStatesGovSchemes);
+route.get('/allScheme/:_id', adminController.getGovSchemeById);
+route.get('/getterritoryScheme', adminController.getAllTerritoryGovSchemes);
+route.delete('/deleteScheme/:_id' , authMiddleware , adminController.deleteGovScheme);
+route.put('/updateScheme/:_id' , authMiddleware , adminController.updateGovScheme);
+route.get('/getAllCounsellingPending' , authMiddleware, profileController.getPendingProfilesConsellingWithSos);
+route.put('/updateSosStatus' , authMiddleware , adminController.updateSosStatus);
+route.get('/getAllUsers',authMiddleware,adminController.getAllUsers);
+route.post('/newusers',authMiddleware,adminController.newusers);
+route.get('/totalUsersCount',authMiddleware,adminController.totalUsersCount);
 route.get('/totalCitizensCount',authMiddleware,adminController.totalCitizensCount);
 route.get('/totalLeaderCount',authMiddleware,adminController.totalLeaderCount);
 route.get('/getAllLeaders',authMiddleware,adminController.getAllLeaders);
 route.get('/getAllCitizens',authMiddleware,adminController.getAllCitizens);
-route.post('/addCategory',authMiddleware,adminController.addCategory)
+route.post('/addCategory',authMiddleware,adminController.addCategory);
 route.get('/getCategory',authMiddleware,adminController.getCategory);
 route.patch('/updateCategory',authMiddleware,adminController.updateCategory);
 route.delete('/deleteCategory/:id',authMiddleware,adminController.deleteCategory);
-route.post('/addSubCategory',authMiddleware,adminController.addSubCategory)
+route.post('/addSubCategory',authMiddleware,adminController.addSubCategory);
 route.get('/getSubCategory',authMiddleware,adminController.getSubCategory);
 route.patch('/updateSubCategory',authMiddleware,adminController.updateSubCategory);
 route.delete('/deleteSubCategory/:id',authMiddleware,adminController.deleteSubCategory);
-route.post('/adminBlock',authMiddleware,adminController.adminBlock)
+route.post('/adminBlock',authMiddleware,adminController.adminBlock);
 route.get('/connectionsOfAll',authMiddleware,adminController.connectionsOfAll)
-route.get('/postOfOfAll',authMiddleware,adminController.postOfOfAll)
-route.get('/groupCount',authMiddleware,adminController.groupCount)
-route.get('/groupmanagement',authMiddleware,adminController.groupmanagement)
-route.get('/allEvents',authMiddleware,adminController.allEvents)
-route.post('/groupBlockUnblock',authMiddleware,adminController.groupBlockUnblock)
-route.post('/allUserNotification',authMiddleware,uploadProfile.single('image'),compressProfileImg,regisController.allUserNotification)
+route.get('/postOfOfAll',authMiddleware,adminController.postOfOfAll);
+route.get('/groupCount',authMiddleware,adminController.groupCount);
+route.get('/groupmanagement',authMiddleware,adminController.groupmanagement);
+route.get('/allEvents',authMiddleware,adminController.allEvents);
+route.post('/groupBlockUnblock',authMiddleware,adminController.groupBlockUnblock);
+route.post('/allUserNotification',authMiddleware,uploadProfile.single('image'),compressProfileImg,regisController.allUserNotification);
 route.post('/citizenNotification',authMiddleware,uploadProfile.single('image'),compressProfileImg,regisController.citizenNotification)
 route.post('/leaderNotification',authMiddleware,uploadProfile.single('image'),compressProfileImg,regisController.leaderNotification)
 route.get('/getnotificationAdmin',authMiddleware,regisController.getnotificationAdmin)

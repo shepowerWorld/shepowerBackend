@@ -344,6 +344,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
           profileID: profileID,
           location: location,
           customer_Id: razorpayCustomer,
+          sos_status: "pending",
           id_card: {
             front: req.originalImagePaths?.["id_card.front"] ,// Directly using the uploaded URL
             back: req.originalImagePaths?.["id_card.back"]   // Directly using the uploaded URL
@@ -391,6 +392,43 @@ exports.createProfileConselingWithSos = async (req, res) => {
 };
 
 
+exports.getPendingProfilesConsellingWithSos = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const pendingProfiles = await leaderUsermaster
+      .find({ sos_status: "pending" })
+      .skip(skip)
+      .limit(limit);
+
+
+    const totalProfiles = await leaderUsermaster.countDocuments({ sos_status: "pending" });
+
+    if (pendingProfiles.length === 0) {
+      return res.status(404).json({ status: false, message: "No pending profiles found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Pending profiles retrieved successfully",
+      data: pendingProfiles,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalProfiles / limit),
+        totalProfiles,
+        limit,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching pending profiles:", err);
+    res.status(500).json({ status: false, message: "Something went wrong" });
+  }
+};
+
+
 
 exports.createProfileCitizenimg = async (req, res) => {
   try {
@@ -411,6 +449,8 @@ exports.createProfileCitizenimg = async (req, res) => {
       return res.status(400).send({ Status: 'Error', message: 'something went wrong' });
   }
 };
+
+
 
 exports.createProfileLeaderimg = async (req, res) => {
   try {
@@ -433,7 +473,6 @@ exports.createProfileLeaderimg = async (req, res) => {
 };
 
 
-
 exports.getAllProfile=async(req,res)=>{
   try{
    
@@ -446,6 +485,8 @@ exports.getAllProfile=async(req,res)=>{
        return res.status(400).json({Status:'Error',Error})
     }
 }
+
+
 
 exports.getOtherprofile = async (req, res) => {
   try {

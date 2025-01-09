@@ -1,8 +1,10 @@
+const mongoose = require('mongoose');
 const leaderUsermaster=require('../models/registrationleader')
 const citiZenUsermaster=require('../models/registrationcitizen')
 const jwtTokenService = require('../services/jwt-service')
 const Admin=require('../models/admin')
 const AddIntrest = require ('../models/category')
+const Govscheme = require('../models/goverment_scheme');
 const SubIntrest = require('../models/subcategory')
 const connection=require('../models/connection')
 const PostBlock=require('../models/postBlock')
@@ -20,6 +22,7 @@ const postSchema=require('../models/posts')
 const weshareSchema=require('../models/weshare')
 const {generateAdminTokensObject,generateAdminTokenPayload,generateUserTokenPayload,generateTokensObject } = require("../services/token.helper");
 const jwt = require('jsonwebtoken');
+const goverment_scheme = require('../models/goverment_scheme');
 
 exports.adminRegistration = async (req, res) => {
     try {
@@ -72,6 +75,213 @@ exports.getAllUsers = async (req, res) => {
         return res.status(500).json({ status:'eroor' ,message: 'Internal server error' });
       }
 };
+
+
+exports.createGovScheme = async (req, res) => {
+  try {
+    const { States_or_union_territories, policy_page_link, locationType } = req.body;
+
+    if (!States_or_union_territories || !policy_page_link || !locationType) {
+      return res.status(400).json({ status: false, message: "Please provide all the required fields" });
+    }
+
+    const existingScheme = await Govscheme.findOne({ States_or_union_territories });
+
+    if (existingScheme) {
+      return res.status(400).json({
+        status: false,
+        message: `The '${States_or_union_territories}' already exists.`
+      });
+    }
+
+    const newGovScheme = new Govscheme({
+      States_or_union_territories,
+      policy_page_link,
+      locationType,
+    });
+
+    await newGovScheme.save();
+    res.status(201).json({ status: true, message: "Gov scheme created successfully", data: newGovScheme });
+  } catch (err) {
+    console.error("Error creating gov scheme:", err);
+    res.status(500).json({ status: false, message: "Something went wrong" });
+  }
+};
+
+
+exports.getAllStatesGovSchemes = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const govSchemes = await Govscheme.find({ locationType: 'state' })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Govscheme.countDocuments({ locationType: 'state' });
+
+    if (!govSchemes || govSchemes.length === 0) {
+      return res.status(404).json({ status: false, message: "No state gov schemes found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "State gov schemes retrieved successfully",
+      data: govSchemes,
+      pagination: {
+        totalItems: total,
+        totalPages: Math.ceil(total / limit), 
+        currentPage: page,
+        itemsPerPage: limit
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching state gov schemes:", err);
+    res.status(500).json({ status: false, message: "Something went wrong" });
+  }
+};
+
+
+
+exports.getAllTerritoryGovSchemes = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const govSchemes = await Govscheme.find({ locationType: 'territory' })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Govscheme.countDocuments({ locationType: 'territory' });
+
+    if (!govSchemes || govSchemes.length === 0) {
+      return res.status(404).json({ status: false, message: "No territory gov schemes found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Territory gov schemes retrieved successfully",
+      data: govSchemes,
+      pagination: {
+        totalItems: total,
+        totalPages: Math.ceil(total / limit), 
+        currentPage: page,
+        itemsPerPage: limit
+      }
+    });
+  } catch (err) {
+    console.error("Error fetching territory gov schemes:", err);
+    res.status(500).json({ status: false, message: "Something went wrong" });
+  }
+};
+
+
+exports.updateGovScheme = async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const { States_or_union_territories, policy_page_link , locationType } = req.body;
+
+    const result = await Govscheme.findOneAndUpdate(
+      { _id }, // Filter by _id
+      { $set: { States_or_union_territories, policy_page_link , locationType} }, // Update the fields
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).json({ status: false, message: "Gov scheme not found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Gov scheme updated successfully",
+      data: result,
+    });
+  } catch (err) {
+    console.error("Error updating gov scheme:", err);
+    res.status(500).json({ status: false, message: "Something went wrong" });
+  }
+};
+
+exports.getGovSchemeById = async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const govScheme = await Govscheme.findOne({_id : _id});
+
+    if (!govScheme) {
+      return res.status(404).json({ status: false, message: "Gov scheme not found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Gov scheme retrieved successfully",
+      data: govScheme,
+    });
+  } catch (err) {
+    console.error("Error fetching gov scheme by ID:", err);
+    res.status(500).json({ status: false, message: "Something went wrong" });
+  }
+};
+
+exports.deleteGovScheme = async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const deletedGovScheme = await Govscheme.findOneAndDelete({_id : _id});
+
+    if (!deletedGovScheme) {
+      return res.status(404).json({ status: false, message: "Gov scheme not found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Gov scheme deleted successfully",
+    });
+  } catch (err) {
+    console.error("Error deleting gov scheme:", err);
+    res.status(500).json({ status: false, message: "Something went wrong" });
+  }
+};
+
+
+exports.updateSosStatus = async (req, res) => {
+  try {
+    const { _id, status } = req.body;
+
+    if (!_id || !status) {
+      return res.status(400).json({ status: false, message: "Please provide _id and status" });
+    }
+
+    // const objectId = mongoose.Types.ObjectId.isValid(_id) ? mongoose.Types.ObjectId(_id) : null;
+
+    const updatedProfile = await leaderUsermaster.findOneAndUpdate(
+      { _id: _id },
+      { $set: { sos_status: status } },
+      { new: true }
+    );
+
+
+    if (!updatedProfile) {
+      return res.status(404).json({ status: false, message: "Profile not found" });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: `Profile status updated to ${status}`,
+      data: updatedProfile,
+    });
+  } catch (error) {
+    console.error("Error updating profile status:", error);
+    res.status(500).json({ status: false, message: "Something went wrong" });
+  }
+}
+
+
+
+
+
 exports.newusers = async (req, res) => {
     try {
       const now = new Date();
@@ -109,6 +319,8 @@ exports.totalUsersCount = async (req, res) => {
         return res.status(500).json({ status:'eroor' ,message: 'Internal server error' });
       }
     }; 
+
+
 exports.getAllCitizens= async (req, res)=>{
     try{
     const response = await citiZenUsermaster.find({profile:true}).exec();
