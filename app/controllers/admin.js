@@ -5,6 +5,7 @@ const jwtTokenService = require('../services/jwt-service')
 const Admin=require('../models/admin')
 const AddIntrest = require ('../models/category')
 const Govscheme = require('../models/goverment_scheme');
+const Notification = require ('../models/notificationMessage');
 const SubIntrest = require('../models/subcategory')
 const connection=require('../models/connection')
 const PostBlock=require('../models/postBlock')
@@ -48,6 +49,8 @@ exports.adminRegistration = async (req, res) => {
       return res.status(500).json({status:'eroor', message: 'Internal server error' });
     }
   };
+
+
 exports.adminLogin = async (req, res) =>{
     try {
       const { userName, password } = req.body;
@@ -64,6 +67,8 @@ exports.adminLogin = async (req, res) =>{
       return res.status(500).json({ status:'eroor' ,message: 'Internal server error' });
     }
   };
+
+
 exports.getAllUsers = async (req, res) => {
     try {
         const userResponse = await citiZenUsermaster.find({profile:true}).sort({ createdAt: -1 });
@@ -75,6 +80,9 @@ exports.getAllUsers = async (req, res) => {
         return res.status(500).json({ status:'eroor' ,message: 'Internal server error' });
       }
 };
+
+
+
 
 
 exports.createGovScheme = async (req, res) => {
@@ -246,6 +254,134 @@ exports.deleteGovScheme = async (req, res) => {
 };
 
 
+
+
+
+exports.createNotification = async (req, res) => {
+  try {
+      const { title, message } = req.body;
+
+      if (!title || !message) {
+          return res.status(400).json({ success: false, message: 'Title and message are required.' });
+      }
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 5);
+
+      const notification = new Notification({
+          title,
+          message,
+          expires_at: expiresAt,
+      });
+
+      await notification.save();
+
+      return res.status(201).json({
+          success: true,
+          message: 'Notification created successfully!',
+          data: notification,
+      });
+  } catch (error) {
+      console.error('Error creating notification:', error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+exports.getActiveNotifications = async (req, res) => {
+  try {
+      const now = new Date();
+      const activeNotifications = await Notification.find({
+          status: 'ACTIVE',
+          expires_at: { $gt: now }, 
+      });
+
+      return res.status(200).json({
+          success: true,
+          message: 'Active notifications fetched successfully!',
+          data: activeNotifications,
+      });
+  } catch (error) {
+      console.error('Error fetching notifications:', error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+exports.deactivateExpiredNotifications = async () => {
+  try {
+      const now = new Date();
+      await Notification.updateMany(
+          { status: 'ACTIVE', expires_at: { $lte: now } },
+          { $set: { status: 'INACTIVE' } }
+      );
+      console.log('Expired notifications deactivated successfully.');
+  } catch (error) {
+      console.error('Error deactivating expired notifications:', error);
+  }
+};
+
+
+exports.updateNotification = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const { title, message, status } = req.body;
+
+      const notification = await Notification.findOne({ _id : id});
+      if (!notification) {
+          return res.status(404).json({ success: false, message: 'Notification not found.' });
+      }
+
+
+      // Update fields if provided
+      if (title) notification.title = title;
+      if (message) notification.message = message;
+      if (status) notification.status = status;
+
+      const notifications = await Notification.findOneAndUpdate(
+        { _id: id },
+        {$set : { title : title , message: message , status: status}},
+        {new : true}
+      )
+
+
+      if (!notifications) {
+        return res.status(404).json({ success: false, message: 'Notification Update Failed.'});
+    }
+
+      return res.status(200).json({
+          success: true,
+          message: 'Notification updated successfully!',
+          data: notification,
+      });
+  } catch (error) {
+      console.error('Error updating notification:', error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+exports.getNotificationById = async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      const notification = await Notification.findOne({_id : id});
+      if (!notification) {
+          return res.status(404).json({ success: false, message: 'Notification not found.' });
+      }
+
+      return res.status(200).json({
+          success: true,
+          message: 'Notification fetched successfully!',
+          data: notification,
+      });
+  } catch (error) {
+      console.error('Error fetching notification:', error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
 exports.updateSosStatus = async (req, res) => {
   try {
     const { _id, status } = req.body;
@@ -277,6 +413,8 @@ exports.updateSosStatus = async (req, res) => {
     res.status(500).json({ status: false, message: "Something went wrong" });
   }
 }
+
+
 
 
 
