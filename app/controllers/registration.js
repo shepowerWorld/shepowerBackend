@@ -276,7 +276,70 @@ exports.otpVerifycitizen = async (req, res) => {
 };
 
 // otp Log in
-exports.otpVerifyleader = async (req, res) => {o
+exports.otpVerifyleader = async (req, res) => {
+  try {
+    const { mobilenumber } = req.body;
+
+    if (mobilenumber) {
+      const response = await leaderUsermaster.findOne({
+        mobilenumber: mobilenumber,
+      });
+      
+      const otp = response.otp;
+
+      if (otp === false && response.profile === false) {
+        const result = await leaderUsermaster.findOneAndUpdate(
+          { mobilenumber: mobilenumber },
+          { $set: { otp: "true" } },
+          { new: true }
+        );
+        if (result) {
+          const tokenPayload = generateUserTokenPayload(result);
+          const tokens = generateTokensObject(tokenPayload);
+          const response = await leaderUsermaster.findOne({
+            mobilenumber: mobilenumber,
+          });
+          return res
+            .status(200)
+            .send({
+              Status: true,
+              message: "otp Verified Successfully",
+              response,
+              tokens,
+            });
+        } else {
+          return res
+            .status(400)
+            .send({ Status: false, message: "somthing went wrong" });
+        }
+      } else {
+        const response = await leaderUsermaster.findOne({
+          mobilenumber: mobilenumber,
+        });
+        const tokenPayload = generateUserTokenPayload(response);
+        const tokens = generateTokensObject(tokenPayload);
+        return res
+          .status(400)
+          .send({
+            Status: "false",
+            message: "otp verified already",
+            response,
+            tokens,
+          });
+      }
+    } else {
+      return res
+        .status(400)
+        .send({ Status: "false", message: "please provide mobilenumber" });
+    }
+  } catch (err) {
+    return res
+      .status(400)
+      .send({ Status: "false", message: "somthing went wrong" });
+  }
+};
+
+exports.otpVerifyCounsellingWithSos = async (req, res) => {
   try {
     const { mobilenumber } = req.body;
 

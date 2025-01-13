@@ -31,6 +31,7 @@ route.post('/otpVerifycitizen',regisController.otpVerifycitizen)
 route.post('/otpVerifyleader',regisController.otpVerifyleader)
 route.post('/loginViaOtpcitizen',regisController.loginViaOtpcitizen)
 route.post('/loginViaOtpleader',regisController.loginViaOtpleader)
+route.post('/otpVerifycounsellingSos',regisController.otpVerifyCounsellingWithSos);
 route.post('/loginViaOtpcounselling',regisController.loginViaOtpConselingWithSOS);
 route.post('/SplashScreen',regisController.SplashScreen)
 route.post('/logoutCheck',regisController.logoutCheck)
