@@ -392,21 +392,30 @@ exports.updateSosStatus = async (req, res) => {
 
     // const objectId = mongoose.Types.ObjectId.isValid(_id) ? mongoose.Types.ObjectId(_id) : null;
 
-    const updatedProfile = await leaderUsermaster.findOneAndUpdate(
+    const updatedProfile = await leaderUsermaster.updateOne(
       { _id: _id },
-      { $set: { sos_status: status } },
-      { new: true }
+      { $set: { sos_status: status } }
     );
+
+
 
 
     if (!updatedProfile) {
       return res.status(404).json({ status: false, message: "Profile not found" });
     }
 
+
+    const findUpdatedProfile = await leaderUsermaster.findOne({_id});
+
+    console.log(findUpdatedProfile, "*********##############3");
+    
+
+
+
     res.status(200).json({
       status: true,
       message: `Profile status updated to ${status}`,
-      data: updatedProfile,
+      data: findUpdatedProfile,
     });
   } catch (error) {
     console.error("Error updating profile status:", error);

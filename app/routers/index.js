@@ -24,6 +24,7 @@ const event = require('../models/event');
 const registrationcitizen = require('../models/registrationcitizen');
 
 
+
 //login module
 route.post('/registrationcitizen',regisController.registrationcitizen)
 route.post('/registrationleader',regisController.registrationleader)
