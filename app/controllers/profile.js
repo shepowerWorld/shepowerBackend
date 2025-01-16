@@ -2306,3 +2306,31 @@ exports.updateProfileCitizen = async (req, res) => {
       return res.status(400).send({ Status: 'Error', message: 'something went wrong' });
   }
 };
+
+
+exports.uploadShepoweridcardfrontFile = function (req, res) {
+  let path = 'shepower/id_card/front/image/';
+  return s3.uploadFileToBucket(req, res, path);
+}
+exports.uploadShepoweridcardbackFile = function (req, res) {
+  let path = 'shepower/id_card/back/image/';
+  return s3.uploadFileToBucket(req, res, path);
+}
+exports.uploadShepoweraddressprooffrontFile = function (req, res) {
+  let path = 'shepower/addressproof/front/image/';
+  return s3.uploadFileToBucket(req, res, path);
+}
+exports.uploadShepoweraddressproofbackFile = function (req, res) {
+  let path = 'shepower/addressproof/back/image/';
+  return s3.uploadFileToBucket(req, res, path);
+}
+
+exports.uploadShepowercertificatengoorinstitutefrontFile = function (req, res) {
+  let path = 'shepower/certificatengoorinstitute/front/image/';
+  return s3.uploadFileToBucket(req, res, path);
+}
+
+exports.uploadShepowercertificatengoorinstitutebackFile = function (req, res) {
+  let path = 'shepower/certificatengoorinstitute/back/image/';
+  return s3.uploadFileToBucket(req, res, path);
+}

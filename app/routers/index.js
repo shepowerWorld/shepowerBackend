@@ -1,6 +1,6 @@
 const express = require('express')
 const route = express.Router();
-
+const s3 = require('../middleware/s3Bucket');
 const {authMiddleware} = require('../services/verifyjwt')
 //controllers
 const regisController=require('../controllers/registration')
@@ -55,6 +55,15 @@ route.put(
     compresssosProfileImg, // Middleware for compressing and uploading files to S3
     profileController.createProfileConselingWithSos // Controller to handle profile creation
   );
+route.post("/uploadidcardfrontimage" ,s3.upload.single('file'),profileController.uploadShepoweridcardfrontFile);
+route.post("/uploadidcardbackimage" ,s3.upload.single('file'),profileController.uploadShepoweridcardbackFile);
+route.post("/uploadaddressfrontimage" ,s3.upload.single('file'),profileController.uploadShepoweraddressprooffrontFile);
+route.post("/uploadaddressbackimage" ,s3.upload.single('file'),profileController.uploadShepoweraddressproofbackFile);
+route.post("/uploadngoandcertificatefrontimage" ,s3.upload.single('file'),profileController.uploadShepowercertificatengoorinstitutefrontFile);
+route.post("/uploadngoandcertificatebackimage" ,s3.upload.single('file'),profileController.uploadShepowercertificatengoorinstitutebackFile);
+
+
+
 route.put('/createProfileCitizenimg',authMiddleware,uploadProfile.single('profile_img'),compressProfileImg,profileController.createProfileCitizenimg)
 route.put('/createProfileLeaderimg',authMiddleware,uploadProfile.single('profile_img'),compressProfileImg,profileController.createProfileLeaderimg)
 route.put('/updateProfileCitizen',authMiddleware,profileController.updateProfileCitizen)
@@ -280,6 +289,7 @@ route.get('/getterritoryScheme', adminController.getAllTerritoryGovSchemes);
 route.delete('/deleteScheme/:_id' , authMiddleware , adminController.deleteGovScheme);
 route.put('/updateScheme/:_id' , authMiddleware , adminController.updateGovScheme);
 route.post('/addNotifications' , authMiddleware , adminController.createNotification);
+route.post("/uploadimage" ,s3.upload.single('file'),adminController.uploadShepowerFile);
 route.get('/getNotifications' , adminController.getActiveNotifications);
 route.get('/getAllCounsellingPending' , authMiddleware, profileController.getPendingProfilesConsellingWithSos);
 route.put('/updateSosStatus' , authMiddleware , adminController.updateSosStatus);

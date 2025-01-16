@@ -24,6 +24,12 @@ const weshareSchema=require('../models/weshare')
 const {generateAdminTokensObject,generateAdminTokenPayload,generateUserTokenPayload,generateTokensObject } = require("../services/token.helper");
 const jwt = require('jsonwebtoken');
 const goverment_scheme = require('../models/goverment_scheme');
+const s3 = require("../middleware/s3custom")
+
+
+
+
+
 
 exports.adminRegistration = async (req, res) => {
     try {
@@ -259,9 +265,9 @@ exports.deleteGovScheme = async (req, res) => {
 
 exports.createNotification = async (req, res) => {
   try {
-      const { title, message } = req.body;
+      const { title, message , filepath} = req.body;
 
-      if (!title || !message) {
+      if (!title || !message || !filepath)  {
           return res.status(400).json({ success: false, message: 'Title and message are required.' });
       }
 
@@ -271,6 +277,7 @@ exports.createNotification = async (req, res) => {
       const notification = new Notification({
           title,
           message,
+          file_path: filepath,
           expires_at: expiresAt,
       });
 
@@ -1452,3 +1459,10 @@ exports.getAllShareLeader = async (req, res) => {
     return res.status(500).send({ status: false, message: err.message || 'Something went wrong' });
   }
 };
+
+
+
+exports.uploadShepowerFile = function (req, res) {
+  let path = 'shepower/notification/image/';
+  return s3.uploadFileToBucket(req, res, path);
+}
