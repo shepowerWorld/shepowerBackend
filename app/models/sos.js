@@ -46,10 +46,10 @@ const sosSchema = new Schema({
                   type:Number,
                 },
                 types_of_danger: {
-                  type: [String]  
+                  type: String
                 },
                 local_Police_Helpline: {
-                  type: [String]  
+                  type: String
               }
                 
               },{ timestamps: true });
