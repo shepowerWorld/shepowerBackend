@@ -332,7 +332,7 @@ exports.deactivateExpiredNotifications = async () => {
 exports.updateNotification = async (req, res) => {
   try {
       const { id } = req.params;
-      const { title, message, status } = req.body;
+      const { title, message, filepath, status } = req.body;
 
       const notification = await Notification.findOne({ _id : id});
       if (!notification) {
@@ -347,7 +347,7 @@ exports.updateNotification = async (req, res) => {
 
       const notifications = await Notification.findOneAndUpdate(
         { _id: id },
-        {$set : { title : title , message: message , status: status}},
+        {$set : { title : title , message: message , file_path: filepath , status: status}},
         {new : true}
       )
 

@@ -159,7 +159,7 @@ const cors = require("cors");
 const http = require('http');
 const path = require('path');
 const mongoose = require('mongoose');
-const { deactivateExpiredNotifications } = require('./app/controllers/admin.js')
+// const { deactivateExpiredNotifications } = require('./app/controllers/admin.js')
 
 const app = express();
 const server = http.createServer(app);
@@ -174,10 +174,10 @@ app.use(bodyParser.json({ limit: '70mb' }));
 app.use(bodyParser.urlencoded({ limit: '70mb', extended: false, parameterLimit: 1000000 }));
 
 // Schedule a cron job to run every day at midnight for inactive notification 
-cron.schedule('0 1 * * *', async () => {
-  console.log('Running cron job to deactivate expired notifications...');
-  await deactivateExpiredNotifications();
-});
+// cron.schedule('0 1 * * *', async () => {
+//   console.log('Running cron job to deactivate expired notifications...');
+//   await deactivateExpiredNotifications();
+// });
 
 app.use(cors());
 
