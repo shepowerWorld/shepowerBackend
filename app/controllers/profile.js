@@ -170,6 +170,10 @@ exports.createProfileLeader = async (req, res) => {
     if (!_id || !firstname || !lastname || !mobileNumber) {
       return res.status(401).json({ status: false, message: "Please provide all the details" });
     }
+
+    const response = await leaderUsermaster.findOne({ _id: _id });
+    console.log(response.mobilenumber, "response")
+
     
     let razorpayCustomerId;
 
@@ -352,47 +356,81 @@ exports.createProfileConselingWithSos = async (req, res) => {
       certificate_ngo_or_institute = {},
     } = req.body;
 
-    
-    
-    
-    if (!_id) {
+    if (!_id || !firstname || !lastname || !mobileNumber) {
       return res.status(500).json({ status: false, message: "Please provide all the details" });
     }
 
-    const existingCustomerKey = Array.from(leaderCustomerMap.keys()).find(
-      key => key.startsWith(`${firstname}_${lastname}`)
-    );
+    const response = await leaderUsermaster.findOne({ _id: _id });
+    console.log(response.mobilenumber, "response")
 
-    if (existingCustomerKey) {
-      return res.status(400).json({ status: false, message: "Customer with the same name already registered" });
-    }
+    let razorpayCustomerId;
 
-    const razorpayInstanceLocal = new Razorpay({
-      key_id: 'rzp_test_1d8Uz0Rqn101Hj',
-      key_secret: 'DREkz3zAKcStej7cslGOdYLy',
-    });
-
-    let razorpayCustomer;
-
+    
     try {
-      const newCustomer = await razorpayInstanceLocal.customers.create({
-        name: `${firstname} ${lastname}`,
-        contact: mobileNumber,
-      });
-      razorpayCustomer = newCustomer.id;
-      console.log("newcustomer", newCustomer);
+      // Fetch all customers from Razorpay
+      const customersList = await razorpayGlobalInstance.customers.all();
+      console.log("Razorpay Customers:", customersList);
 
-      // Store the customer_id in the mapping for future use
-      leaderCustomerMap.set(`${firstname}_${lastname}_${mobileNumber}`, razorpayCustomer);
-    } catch (error) {
-      if (error.statusCode === 400 && error.error.code === 'BAD_REQUEST_ERROR') {
-        console.log("Customer already exists:", error.error.description);
-        razorpayCustomer = error.error.metadata.customer_id;
+      // Check if a customer with the provided mobile number already exists
+      const existingCustomer = customersList.items.find(
+        (customer) => customer.contact === mobileNumber
+      );
+
+      if (existingCustomer) {
+        // Use the existing customer ID
+        razorpayCustomerId = existingCustomer.id;
+        console.log("Existing Razorpay Customer Found:", razorpayCustomerId);
       } else {
-        console.error("Error creating Razorpay customer:", error);
-        return res.status(500).json({ status: false, message: "Error creating Razorpay customer" });
+        // Create a new customer if no matching customer is found
+        const newCustomer = await razorpayGlobalInstance.customers.create({
+          name: `${firstname} ${lastname}`,
+          contact: mobileNumber,
+          email: email || null,
+          notes: { profession: proffession }, // Optional custom notes
+        });
+
+        razorpayCustomerId = newCustomer.id;
+        console.log("New Razorpay Customer Created:", newCustomer);
       }
+    } catch (error) {
+      console.error("Error while handling Razorpay customers:", error);
+      return res.status(500).json({ status: false, message: "Error handling Razorpay customers", error });
     }
+
+    // const existingCustomerKey = Array.from(leaderCustomerMap.keys()).find(
+    //   key => key.startsWith(`${firstname}_${lastname}`)
+    // );
+
+    // if (existingCustomerKey) {
+    //   return res.status(400).json({ status: false, message: "Customer with the same name already registered" });
+    // }
+
+    // const razorpayInstanceLocal = new Razorpay({
+    //   key_id: 'rzp_test_1d8Uz0Rqn101Hj',
+    //   key_secret: 'DREkz3zAKcStej7cslGOdYLy',
+    // });
+
+    // let razorpayCustomer;
+
+    // try {
+    //   const newCustomer = await razorpayInstanceLocal.customers.create({
+    //     name: `${firstname} ${lastname}`,
+    //     contact: mobileNumber,
+    //   });
+    //   razorpayCustomer = newCustomer.id;
+    //   console.log("newcustomer", newCustomer);
+
+    //   // Store the customer_id in the mapping for future use
+    //   leaderCustomerMap.set(`${firstname}_${lastname}_${mobileNumber}`, razorpayCustomer);
+    // } catch (error) {
+    //   if (error.statusCode === 400 && error.error.code === 'BAD_REQUEST_ERROR') {
+    //     console.log("Customer already exists:", error.error.description);
+    //     razorpayCustomer = error.error.metadata.customer_id;
+    //   } else {
+    //     console.error("Error creating Razorpay customer:", error);
+    //     return res.status(500).json({ status: false, message: "Error creating Razorpay customer" });
+    //   }
+    // }
 
     const randomNumber = Math.floor(Math.random() * 1000000);
     const profileID = `Leader${randomNumber}`;
@@ -410,7 +448,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
           proffession: proffession,
           profileID: profileID,
           location: location,
-          customer_Id: razorpayCustomer,
+          customer_Id: razorpayCustomerId,
           sos_status: "pending",
           id_card, 
           address_proof, 
