@@ -185,27 +185,57 @@ exports.createProfileLeader = async (req, res) => {
       key_secret: 'DREkz3zAKcStej7cslGOdYLy',
     });
 
+
+    const customersList = await razorpayInstanceLocal.customers.all();
+    console.log("customer details:" , customersList)
+
+    const existingCustomer = customersList.items.find(
+      (customer) => customer.contact === mobileNumber
+    );
+    
     let razorpayCustomer;
 
-    try {
-      const newCustomer = await razorpayInstanceLocal.customers.create({
-        name: `${firstname} ${lastname}`,
-        contact: mobileNumber, 
-      });
-      razorpayCustomer = newCustomer.id;
-      console.log("newcustomer", newCustomer);
+    if (existingCustomer) {
+      // If found, use the existing customer's ID
+      razorpayCustomer = existingCustomer.id;
+      console.log(existingCustomer, "existingCustomer");
+      console.log("Existing Razorpay Customer Found:", razorpayCustomer);
+    } 
+    // else {
+    //   // If not found, create a new Razorpay customer
+    //   const newCustomer = await razorpayInstanceLocal.customers.create({
+    //     name: `${firstname} ${lastname}`,
+    //     contact: mobileNumber,
+    //   });
+    //   razorpayCustomer = newCustomer.id;
+    //   console.log("New Razorpay Customer Created:", razorpayCustomer);
+    // }
+    
 
-      // Store the customer_id in the mapping for future use
-      leaderCustomerMap.set(`${firstname}_${lastname}_${mobileNumber}`, razorpayCustomer);
-    } catch (error) {
-      if (error.statusCode === 400 && error.error.code === 'BAD_REQUEST_ERROR') {
-        console.log("Customer already exists:", error.error.description);
-        razorpayCustomer = error.error.metadata.customer_id;
-      } else {
-        console.error("Error creating Razorpay customer:", error);
-        return res.status(500).json({ status: false, message: "Error creating Razorpay customer" });
-      }
-    }
+    
+  
+    // try {
+    //   const newCustomer = await razorpayInstanceLocal.customers.create({
+    //     name: `${firstname} ${lastname}`,
+    //     contact: mobileNumber, 
+    //   });
+    //   razorpayCustomer = newCustomer.id;
+    //   console.log("newcustomer", newCustomer);
+
+    //   // Store the customer_id in the mapping for future use
+    //   leaderCustomerMap.set(`${firstname}_${lastname}_${mobileNumber}`, razorpayCustomer);
+    // } catch (error) {
+    //   if (error.statusCode === 400 && error.error.code === 'BAD_REQUEST_ERROR') {
+    //     console.log("Customer already exists:", error.error.description);
+    //     // razorpayCustomer = error.error.metadata.customer_id;
+    //   } else {
+    //     console.error("Error creating Razorpay customer:", error);
+    //     return res.status(500).json({ status: false, message: "Error creating Razorpay customer" });
+    //   }
+
+    //   console.log("customer error", error);
+      
+    // }
 
     const randomNumber = Math.floor(Math.random() * 1000000);
     const profileID = `Leader${randomNumber}`;
@@ -286,7 +316,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
     } = req.body;
 
     
-    console.log(req.body);
+    
     
     if (!_id) {
       return res.status(500).json({ status: false, message: "Please provide all the details" });
@@ -320,7 +350,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
     } catch (error) {
       if (error.statusCode === 400 && error.error.code === 'BAD_REQUEST_ERROR') {
         console.log("Customer already exists:", error.error.description);
-        razorpayCustomer = error.error.description;
+        razorpayCustomer = error.error.metadata.customer_id;
       } else {
         console.error("Error creating Razorpay customer:", error);
         return res.status(500).json({ status: false, message: "Error creating Razorpay customer" });

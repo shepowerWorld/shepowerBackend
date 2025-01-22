@@ -276,39 +276,44 @@ const userSchema = new Schema(
       default: "Counsellor",
     },
 
-    
-      id_card: {
-        front: {
-          type: String, 
-        },
-        back: {
-          type: String, 
-        },
-      },
 
-      
-      address_proof: {
-        front: {
-          type: String, 
-        },
-        back: {
-          type: String, 
-        },
-      },
-      certificate_ngo_or_institute: {
-        front: {
-          type: String, 
-        },
-        back: {
-          type: String, 
-        },
-      },
-
-      sos_status: {
+    id_card: {
+      front: {
         type: String,
-        enum: ["pending", "approved", "rejected" , null], // Enum for admin status
-        default: null
       },
+      back: {
+        type: String,
+      },
+    },
+
+
+    address_proof: {
+      front: {
+        type: String,
+      },
+      back: {
+        type: String,
+      },
+    },
+    certificate_ngo_or_institute: {
+      front: {
+        type: String,
+      },
+      back: {
+        type: String,
+      },
+    },
+
+    sos_status: {
+      type: String,
+      enum: ["pending", "approved", "rejected", null], // Enum for admin status
+      default: null
+    },
+
+    customer_Id: {
+      type: String,
+      default: "",
+    },
 
     public: {
       type: Boolean,
