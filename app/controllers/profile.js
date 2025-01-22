@@ -167,40 +167,77 @@ exports.createProfileLeader = async (req, res) => {
       location,
     } = req.body;
 
-    if (!_id ) {
+    if (!_id || !firstname || !lastname || !mobileNumber) {
       return res.status(401).json({ status: false, message: "Please provide all the details" });
     }
+    
+    let razorpayCustomerId;
 
+    try {
+      // Fetch all customers from Razorpay
+      const customersList = await razorpayGlobalInstance.customers.all();
+      console.log("Razorpay Customers:", customersList);
 
-    const existingCustomerKey = Array.from(leaderCustomerMap.keys()).find(
-      key => key.startsWith(`${firstname}_${lastname}`)
-    );
+      // Check if a customer with the provided mobile number already exists
+      const existingCustomer = customersList.items.find(
+        (customer) => customer.contact === mobileNumber
+      );
 
-    if (existingCustomerKey) {
-      return res.status(400).json({ status: false, message: "Customer with the same name already registered" });
+      if (existingCustomer) {
+        // Use the existing customer ID
+        razorpayCustomerId = existingCustomer.id;
+        console.log("Existing Razorpay Customer Found:", razorpayCustomerId);
+      } else {
+        // Create a new customer if no matching customer is found
+        const newCustomer = await razorpayGlobalInstance.customers.create({
+          name: `${firstname} ${lastname}`,
+          contact: mobileNumber,
+          email: email || null,
+          notes: { profession: proffession }, // Optional custom notes
+        });
+
+        razorpayCustomerId = newCustomer.id;
+        console.log("New Razorpay Customer Created:", newCustomer);
+      }
+    } catch (error) {
+      console.error("Error while handling Razorpay customers:", error);
+      return res.status(500).json({ status: false, message: "Error handling Razorpay customers", error });
     }
 
-    const razorpayInstanceLocal = new Razorpay({
-      key_id: 'rzp_test_1d8Uz0Rqn101Hj',
-      key_secret: 'DREkz3zAKcStej7cslGOdYLy',
-    });
+    // const existingCustomerKey = Array.from(leaderCustomerMap.keys()).find(
+    //   key => key.startsWith(`${firstname}_${lastname}`)
+    // );
+
+    // if (existingCustomerKey) {
+    //   return res.status(400).json({ status: false, message: "Customer with the same name already registered" });
+    // }
+
+    // const razorpayInstanceLocal = new Razorpay({
+    //   key_id: 'rzp_test_1d8Uz0Rqn101Hj',
+    //   key_secret: 'DREkz3zAKcStej7cslGOdYLy',
+    // });
 
 
-    const customersList = await razorpayInstanceLocal.customers.all();
-    console.log("customer details:" , customersList)
+    // const customersList = await razorpayInstanceLocal.customers.all();
+    // console.log("customer details:" , customersList)
 
-    const existingCustomer = customersList.items.find(
-      (customer) => customer.contact === mobileNumber
-    );
+    // const existingCustomer = customersList.items.find(
+    //   (customer) => customer.contact === mobileNumber
+    // );
     
-    let razorpayCustomer;
+    // let razorpayCustomer;
 
-    if (existingCustomer) {
-      // If found, use the existing customer's ID
-      razorpayCustomer = existingCustomer.id;
-      console.log(existingCustomer, "existingCustomer");
-      console.log("Existing Razorpay Customer Found:", razorpayCustomer);
-    } 
+    // if (existingCustomer) {
+    //   // If found, use the existing customer's ID
+    //   razorpayCustomer = existingCustomer.id;
+    //   console.log(existingCustomer, "existingCustomer");
+    //   console.log("Existing Razorpay Customer Found:", razorpayCustomer);
+    // } 
+
+
+
+
+
     // else {
     //   // If not found, create a new Razorpay customer
     //   const newCustomer = await razorpayInstanceLocal.customers.create({
@@ -253,7 +290,7 @@ exports.createProfileLeader = async (req, res) => {
           proffession: proffession,
           profileID: profileID,
           location: location,
-          customer_Id: razorpayCustomer,
+          customer_Id: razorpayCustomerId,
         },
       },
       { new: true }
