@@ -144,14 +144,24 @@ exports.registrationleader = async (req, res) => {
       const istherearenot = await leaderUsermaster.findOne({
         mobilenumber: mobilenumber,
       });
+
       // const isthere = await citiZenUsermaster.findOne({
       //   mobilenumber: mobilenumber,
       // });
 
 
       if (istherearenot) {
-        const otp = istherearenot.otp;
-        const profile = istherearenot.profile;
+        const { otp, profile, sos_status } = istherearenot;
+
+        if (sos_status === "pending") {
+          return res
+            .status(400)
+            .send({
+              Status: false,
+              message: "Profile is not approved by admin",
+            });
+        }
+
         const response = istherearenot;
         if (otp === true && profile === true) {
           return res
@@ -213,6 +223,8 @@ exports.registrationleader = async (req, res) => {
       .send({ Status: "Error", message: "somthing went wrong" });
   }
 };
+
+
 
 
 exports.otpVerifycitizen = async (req, res) => {
