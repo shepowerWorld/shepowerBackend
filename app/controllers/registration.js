@@ -261,7 +261,6 @@ exports.registrationCounsellorWithSos = async (req, res) => {
           mobilenumber: mobilenumber,
           token: token,
           user_type: "counsellorWithSos", // Setting user_type for this API
-          sos_status:"pending"
         });
         const response = await user.save();
 

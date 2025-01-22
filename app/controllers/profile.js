@@ -449,6 +449,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
           profileID: profileID,
           location: location,
           customer_Id: razorpayCustomerId,
+          user_type: "pending",
           id_card, 
           address_proof, 
           certificate_ngo_or_institute, 
