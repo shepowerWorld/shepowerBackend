@@ -44,7 +44,7 @@ route.put('/createProfileCitizen',authMiddleware,profileController.createProfile
 route.put('/createProfileLeader',authMiddleware,profileController.createProfileLeader)
 route.put(
     '/createProfileConselingWithSos',  // Middleware for compressing and uploading files to S3
-    profileController.createProfileConselingWithSos // Controller to handle profile creation
+  authMiddleware, profileController.createProfileConselingWithSos // Controller to handle profile creation
   );
 route.post("/uploadidcardfrontimage" ,s3.upload.single('file'),profileController.uploadShepoweridcardfrontFile);
 route.post("/uploadidcardbackimage" ,s3.upload.single('file'),profileController.uploadShepoweridcardbackFile);

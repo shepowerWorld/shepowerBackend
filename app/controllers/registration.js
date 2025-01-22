@@ -151,16 +151,7 @@ exports.registrationleader = async (req, res) => {
 
 
       if (istherearenot) {
-        const { otp, profile, sos_status } = istherearenot;
-
-        if (sos_status === "pending") {
-          return res
-            .status(400)
-            .send({
-              Status: false,
-              message: "Profile is not approved by admin",
-            });
-        }
+        const { otp, profile} = istherearenot;
 
         const response = istherearenot;
         if (otp === true && profile === true) {
@@ -187,6 +178,8 @@ exports.registrationleader = async (req, res) => {
         const user = new leaderUsermaster({
           mobilenumber: mobilenumber,
           token: token,
+          user_type: "Counsellor",
+          sos_status: null
         });
         const response = await user.save();
 
@@ -194,6 +187,7 @@ exports.registrationleader = async (req, res) => {
           user_id: response._id,
           newdevice_id: device_id,
           token: token,
+
         });
         await check.save();
         if (response) {
@@ -224,6 +218,85 @@ exports.registrationleader = async (req, res) => {
   }
 };
 
+exports.registrationCounsellorWithSos = async (req, res) => {
+  try {
+    const { mobilenumber, token, device_id } = req.body;
+
+    if (!mobilenumber) {
+      return res
+        .status(400)
+        .send({ Status: false, message: "Please provide Mobile number" });
+    } else if (mobilenumber) {
+
+      const istherearenot = await leaderUsermaster.findOne({
+        mobilenumber: mobilenumber,
+      });
+
+      if (istherearenot) {
+        const { otp, profile} = istherearenot;
+
+
+        const response = istherearenot;
+        if (otp === true && profile === true) {
+          return res
+            .status(400)
+            .send({
+              Status: false,
+              message: "You have already registered with Shepower",
+              istherearenot,
+            });
+        } else if (otp === true && profile === false) {
+          const tokenPayload = generateUserTokenPayload(response);
+          const tokens = generateTokensObject(tokenPayload);
+          return res
+            .status(200)
+            .send({ Status: false, message: "OTP verified", response, tokens });
+        } else if (otp === false && profile === false) {
+          return res
+            .status(200)
+            .send({ Status: true, message: "Otp sent on mobile successfully" });
+        }
+      } else if (!istherearenot) {
+        const user = new leaderUsermaster({
+          mobilenumber: mobilenumber,
+          token: token,
+          user_type: "counsellorWithSos", // Setting user_type for this API
+          sos_status:"pending"
+        });
+        const response = await user.save();
+
+        const check = new locgoutCheck({
+          user_id: response._id,
+          newdevice_id: device_id,
+          token: token,
+        });
+        await check.save();
+
+        if (response) {
+          return res
+            .status(200)
+            .send({
+              Status: true,
+              message: "Otp sent successfully to your mobile number",
+            });
+        } else {
+          return res
+            .status(400)
+            .send({ Status: false, message: "Something went wrong" });
+        }
+      } else {
+        return res
+          .status(400)
+          .send({ Status: false, message: "Already registered" });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(400)
+      .send({ Status: "Error", message: "Something went wrong" });
+  }
+};
 
 
 
@@ -373,17 +446,19 @@ exports.otpVerifyCounsellingWithSos = async (req, res) => {
         .send({ Status: "false", message: "Mobile number not found" });
     }
 
-    // Check if sos_status is pending and profile is not approved
-    if (response.sos_status === "pending" || !response.profile) {
-      return res
-        .status(403)
-        .send({ Status: "false", message: "Profile is not approved by admin" });
+   
+    const { sos_status, otp, profile } = response;
+
+    if (otp === true && sos_status === "pending") {
+      return res.status(403).send({
+        Status: "false",
+        message:
+          "Your profile is not approved by admin. Please contact support.",
+      });
     }
 
-    const otp = response.otp;
-
     // Check if OTP is not verified and profile is not approved
-    if (otp === false && response.profile === false) {
+    if (otp === false && profile === false) {
       const result = await leaderUsermaster.findOneAndUpdate(
         { mobilenumber },
         { $set: { otp: "true" } },
