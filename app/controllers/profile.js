@@ -280,16 +280,16 @@ exports.createProfileConselingWithSos = async (req, res) => {
       sports = [],
       otherintrests = [],
       location,
-      // Add the image URLs to be saved in the database
-      // id_card,
-      // address_proof,
-      // certificate_ngo_or_institute,
+      id_card = {},
+      address_proof = {},
+      certificate_ngo_or_institute = {},
     } = req.body;
 
     
+    console.log(req.body);
     
     if (!_id) {
-      return res.status(401).json({ status: false, message: "Please provide all the details" });
+      return res.status(500).json({ status: false, message: "Please provide all the details" });
     }
 
     const existingCustomerKey = Array.from(leaderCustomerMap.keys()).find(
@@ -345,18 +345,9 @@ exports.createProfileConselingWithSos = async (req, res) => {
           location: location,
           customer_Id: razorpayCustomer,
           sos_status: "pending",
-          id_card: {
-            front: req.originalImagePaths?.["id_card.front"] ,// Directly using the uploaded URL
-            back: req.originalImagePaths?.["id_card.back"]   // Directly using the uploaded URL
-          },
-          address_proof: {
-            front: req.originalImagePaths?.["address_proof.front"], // Directly using the uploaded URL
-            back: req.originalImagePaths?.["address_proof.back"]  // Directly using the uploaded URL
-          },
-          certificate_ngo_or_institute: {
-            front: req.originalImagePaths?.["certificate_ngo_or_institute.front"], // Directly using the uploaded URL
-            back: req.originalImagePaths?.["certificate_ngo_or_institute.back"]  // Directly using the uploaded URL
-          },
+          id_card, 
+          address_proof, 
+          certificate_ngo_or_institute, 
         },
       },
       { new: true }
