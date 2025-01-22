@@ -132,8 +132,6 @@ exports.registrationcitizen = async (req, res) => {
 };
 
 
-
-
 exports.registrationleader = async (req, res) => {
   try {
     const { mobilenumber, token, device_id } = req.body;
@@ -346,64 +344,70 @@ exports.otpVerifyCounsellingWithSos = async (req, res) => {
   try {
     const { mobilenumber } = req.body;
 
-    if (mobilenumber) {
-      const response = await leaderUsermaster.findOne({
-        mobilenumber: mobilenumber,
-      });
-      
-      const otp = response.otp;
-
-      if (otp === false && response.profile === false) {
-        const result = await leaderUsermaster.findOneAndUpdate(
-          { mobilenumber: mobilenumber },
-          { $set: { otp: "true" } },
-          { new: true }
-        );
-        if (result) {
-          const tokenPayload = generateUserTokenPayload(result);
-          const tokens = generateTokensObject(tokenPayload);
-          const response = await leaderUsermaster.findOne({
-            mobilenumber: mobilenumber,
-          });
-          return res
-            .status(200)
-            .send({
-              Status: true,
-              message: "otp Verified Successfully",
-              response,
-              tokens,
-            });
-        } else {
-          return res
-            .status(400)
-            .send({ Status: false, message: "somthing went wrong" });
-        }
-      } else {
-        const response = await leaderUsermaster.findOne({
-          mobilenumber: mobilenumber,
-        });
-        const tokenPayload = generateUserTokenPayload(response);
-        const tokens = generateTokensObject(tokenPayload);
-        return res
-          .status(400)
-          .send({
-            Status: "false",
-            message: "otp verified already",
-            response,
-            tokens,
-          });
-      }
-    } else {
+    if (!mobilenumber) {
       return res
         .status(400)
-        .send({ Status: "false", message: "please provide mobilenumber" });
+        .send({ Status: "false", message: "Please provide mobilenumber" });
+    }
+
+    const response = await leaderUsermaster.findOne({ mobilenumber });
+
+    if (!response) {
+      return res
+        .status(404)
+        .send({ Status: "false", message: "Mobile number not found" });
+    }
+
+    // Check if sos_status is pending and profile is not approved
+    if (response.sos_status === "pending" || !response.profile) {
+      return res
+        .status(403)
+        .send({ Status: "false", message: "Profile is not approved by admin" });
+    }
+
+    const otp = response.otp;
+
+    // Check if OTP is not verified and profile is not approved
+    if (otp === false && response.profile === false) {
+      const result = await leaderUsermaster.findOneAndUpdate(
+        { mobilenumber },
+        { $set: { otp: "true" } },
+        { new: true }
+      );
+
+      if (result) {
+        const tokenPayload = generateUserTokenPayload(result);
+        const tokens = generateTokensObject(tokenPayload);
+
+        return res.status(200).send({
+          Status: true,
+          message: "OTP Verified Successfully",
+          response: result,
+          tokens,
+        });
+      } else {
+        return res
+          .status(400)
+          .send({ Status: "false", message: "Something went wrong" });
+      }
+    } else {
+      const tokenPayload = generateUserTokenPayload(response);
+      const tokens = generateTokensObject(tokenPayload);
+
+      return res.status(400).send({
+        Status: "false",
+        message: "OTP verified already",
+        response,
+        tokens,
+      });
     }
   } catch (err) {
     return res
-      .status(400)
-      .send({ Status: "false", message: "somthing went wrong" });
+      .status(500)
+      .send({ Status: "false", message: "Something went wrong", error: err.message });
   }
 };
+
 
 
 
@@ -560,7 +564,7 @@ exports.loginViaOtpConselingWithSOS = async (req, res) => {
         const response = await leaderUsermaster.findOne({ mobilenumber });
     
         if(response) {
-          if (response.sos_status === "Rejected" || response.sos_status === "Pending") {
+          if (response.sos_status === "Rejected" && response.sos_status === "Pending") {
             return res.status(400).send({
               Status: false,
               message: "Your SOS status is not approved by admin",
