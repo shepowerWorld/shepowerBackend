@@ -131,6 +131,9 @@ exports.registrationcitizen = async (req, res) => {
   }
 };
 
+
+
+
 exports.registrationleader = async (req, res) => {
   try {
     const { mobilenumber, token, device_id } = req.body;
