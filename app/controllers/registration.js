@@ -348,7 +348,7 @@ exports.otpVerifyleader = async (req, res) => {
   } catch (err) {
     return res
       .status(400)
-      .send({ Status: "false", message: "somthing went wrong" });
+      .send({ Status: "false", message: `somthing went wrong:${err}` });
   }
 };
 
