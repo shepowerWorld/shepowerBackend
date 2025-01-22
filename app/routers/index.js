@@ -28,6 +28,7 @@ const registrationcitizen = require('../models/registrationcitizen');
 //login module
 route.post('/registrationcitizen',regisController.registrationcitizen)
 route.post('/registrationleader',regisController.registrationleader)
+route.post('/registrationcounsellingSos', regisController.registrationleader)
 route.post('/otpVerifycitizen',regisController.otpVerifycitizen)
 route.post('/otpVerifyleader',regisController.otpVerifyleader)
 route.post('/loginViaOtpcitizen',regisController.loginViaOtpcitizen)
