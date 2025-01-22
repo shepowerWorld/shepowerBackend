@@ -364,7 +364,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
     console.log(response.mobilenumber, "response")
 
     let razorpayCustomerId;
-
+    
     
     try {
       // Fetch all customers from Razorpay
@@ -449,7 +449,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
           profileID: profileID,
           location: location,
           customer_Id: razorpayCustomerId,
-          user_type: "pending",
+          sos_status: "pending",
           id_card, 
           address_proof, 
           certificate_ngo_or_institute, 
