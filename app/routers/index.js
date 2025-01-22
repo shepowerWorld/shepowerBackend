@@ -43,16 +43,7 @@ route.post('/findleaders',authMiddleware,regisController.findleaders)
 route.put('/createProfileCitizen',authMiddleware,profileController.createProfileCitizen)
 route.put('/createProfileLeader',authMiddleware,profileController.createProfileLeader)
 route.put(
-    '/createProfileConselingWithSos', 
-    upload.fields([
-      { name: 'id_card.front', maxCount: 1 },
-      { name: 'id_card.back', maxCount: 1 },
-      { name: 'address_proof.front', maxCount: 1 },
-      { name: 'address_proof.back', maxCount: 1 },
-      { name: 'certificate_ngo_or_institute.front', maxCount: 1 },
-      { name: 'certificate_ngo_or_institute.back', maxCount: 1 },
-    ]),
-    compresssosProfileImg, // Middleware for compressing and uploading files to S3
+    '/createProfileConselingWithSos',  // Middleware for compressing and uploading files to S3
     profileController.createProfileConselingWithSos // Controller to handle profile creation
   );
 route.post("/uploadidcardfrontimage" ,s3.upload.single('file'),profileController.uploadShepoweridcardfrontFile);
