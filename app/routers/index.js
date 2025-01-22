@@ -33,7 +33,7 @@ route.post('/otpVerifyleader',regisController.otpVerifyleader)
 route.post('/loginViaOtpcitizen',regisController.loginViaOtpcitizen)
 route.post('/loginViaOtpleader',regisController.loginViaOtpleader)
 route.post('/otpVerifycounsellingSos',regisController.otpVerifyCounsellingWithSos);
-route.post('/loginViaOtpcounselling',regisController.loginViaOtpConselingWithSOS);
+route.post('/loginViaOtpcounsellingSos',regisController.loginViaOtpConselingWithSOS);
 route.post('/SplashScreen',regisController.SplashScreen)
 route.post('/logoutCheck',regisController.logoutCheck)
 route.post('/deeplink',authMiddleware,regisController.deeplink)
