@@ -10,6 +10,7 @@ const post = require("../models/posts");
 const comment = require("../models/comments");
 const replycomment = require("../models/replycomment");
 const mongoose = require("mongoose");
+const Razorpay = require('razorpay');
 const { ObjectId } = require('mongodb');
 const serviceAccount = require("../../shepower-df497-firebase-adminsdk-senfw-1ef9489880.json");
 const admin = require("firebase-admin");
@@ -21,7 +22,6 @@ const storeMsg = require("../models/storeMessage");
 const sosSchema = require("../models/sos");
 const adminNotification = require("../models/adminNotification");
 const comments = require("../models/comments");
-const razorpay = require("razorpay");
 const Refund = require("../models/refund");
 const Order = require("../models/order");
 const locgoutCheck = require("../models/logoutSchema");
@@ -36,6 +36,12 @@ const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 
 
+
+
+
+
+
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -43,10 +49,6 @@ admin.initializeApp({
 
 
 
-const razorpayInstance = new razorpay({
-  key_id: "rzp_test_1d8Uz0Rqn101Hj",
-  key_secret: "DREkz3zAKcStej7cslGOdYLy",
-});
 
 const messaging = admin.messaging();
 
@@ -65,7 +67,7 @@ exports.registrationcitizen = async (req, res) => {
       // const isthere = await leaderUsermaster.findOne({
       //   mobilenumber: mobilenumber,
       // });
-      
+
       if (istherearenot) {
         const otp = istherearenot.otp;
         const profile = istherearenot.profile;
@@ -89,8 +91,8 @@ exports.registrationcitizen = async (req, res) => {
             .status(200)
             .send({ Status: true, message: "Otp sent on mobile Successfully" });
         }
-        
-      } else if (!istherearenot ) //&& !isthere 
+
+      } else if (!istherearenot) //&& !isthere 
       {
         const user = new citiZenUsermaster({
           mobilenumber: mobilenumber,
@@ -145,13 +147,10 @@ exports.registrationleader = async (req, res) => {
         mobilenumber: mobilenumber,
       });
 
-      // const isthere = await citiZenUsermaster.findOne({
-      //   mobilenumber: mobilenumber,
-      // });
-
+     
 
       if (istherearenot) {
-        const { otp, profile} = istherearenot;
+        const { otp, profile } = istherearenot;
 
         const response = istherearenot;
         if (otp === true && profile === true) {
@@ -162,6 +161,7 @@ exports.registrationleader = async (req, res) => {
               message: "You have already registerd with the Shepower",
               istherearenot,
             });
+
         } else if (otp === true && profile === false) {
           const tokenPayload = generateUserTokenPayload(response);
           const tokens = generateTokensObject(tokenPayload);
@@ -173,15 +173,17 @@ exports.registrationleader = async (req, res) => {
             .status(200)
             .send({ Status: true, message: "Otp sent on mobile Successfully" });
         }
-      } else if (!istherearenot ) //&& !isthere
-        {
+      } else if (!istherearenot) //&& !isthere
+      {
         const user = new leaderUsermaster({
           mobilenumber: mobilenumber,
           token: token,
           user_type: "Counsellor",
           sos_status: null
         });
-        const response = await user.save();
+        const response = "demo"
+
+        // await user.save();
 
         const check = new locgoutCheck({
           user_id: response._id,
@@ -189,7 +191,7 @@ exports.registrationleader = async (req, res) => {
           token: token,
 
         });
-        await check.save();
+        // await check.save();
         if (response) {
           // const tokenPayload = generateUserTokenPayload(response);
           // const tokens = generateTokensObject(tokenPayload);
@@ -218,6 +220,258 @@ exports.registrationleader = async (req, res) => {
   }
 };
 
+
+exports.registrationCitizentoLeader = async (req, res) => {
+  try {
+    const { mobilenumber } = req.body;
+
+    if (!mobilenumber) {
+      return res
+        .status(400)
+        .send({ Status: false, message: "Please provide a mobile number" });
+    }
+
+   
+    const citizenUser = await citiZenUsermaster.findOne({ mobilenumber });
+
+    if (!citizenUser) {
+      return res.status(400).send({
+        Status: false,
+        message: "User not found in the citizen database.",
+      });
+    }
+
+    
+    const {
+      firstname,
+      lastname,
+      email,
+      dob,
+      education,
+      profession,
+      location,
+      familymembers,
+      profile_img,
+      languages,
+    } = citizenUser;
+
+    
+    const newLeaderUser = new leaderUsermaster({
+      mobilenumber,
+      user_type: "Counsellor",
+      sos_status: null,
+      firstname,
+      lastname,
+      email,
+      dob,
+      education,
+      profile_img,
+      profession,
+      location,
+      familymembers,
+      languages,
+      otp: true, 
+      profile: true, 
+      customer_Id: null,
+    });
+
+   
+    const savedLeaderUser = await newLeaderUser.save();
+
+    if (!savedLeaderUser) {
+      return res.status(500).send({
+        Status: false,
+        message: "Failed to save leader user in the database.",
+      });
+    }
+
+    
+    const razorpayGlobalInstance = new Razorpay({
+      key_id: "rzp_test_1d8Uz0Rqn101Hj",
+      key_secret: "DREkz3zAKcStej7cslGOdYLy",
+    });
+
+    try {
+     
+      const customersList = await razorpayGlobalInstance.customers.all();
+      console.log(customersList);
+      // Check if a customer with the provided mobile number already exists
+      const existingCustomer = customersList.items.find(
+        (customer) => customer.contact === savedLeaderUser.mobilenumber
+      );
+
+      let razorpayCustomerId;
+
+      if (existingCustomer) {
+        
+        razorpayCustomerId = existingCustomer.id;
+      } else {
+       
+        const newCustomer = await razorpayGlobalInstance.customers.create({
+          name: `${firstname} ${lastname}`,
+          contact: savedLeaderUser.mobilenumber,
+          email: email || null,
+          notes: { profession },
+        });
+
+        razorpayCustomerId = newCustomer.id;
+      }
+
+     
+      savedLeaderUser.customer_Id = razorpayCustomerId;
+      await savedLeaderUser.save();
+
+      return res.status(200).send({
+        Status: true,
+        message: "User registered successfully, profile created, and Razorpay customer ID linked.",
+        savedLeaderUser,
+      });
+    } catch (error) {
+      console.error("Error while handling Razorpay customers:", error);
+      return res.status(500).json({
+        Status: false,
+        message: "Error handling Razorpay customers",
+        error,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send({
+      Status: "Error",
+      message: "Something went wrong",
+    });
+  }
+};
+
+exports.registrationLeaderToCitizen = async (req, res) => {
+  try {
+    const { mobilenumber } = req.body;
+
+    if (!mobilenumber) {
+      return res
+        .status(400)
+        .send({ Status: false, message: "Please provide a mobile number" });
+    }
+
+    // Check if the leader exists in the leader database
+    const leaderUser = await leaderUsermaster.findOne({ mobilenumber });
+
+    if (!leaderUser) {
+      return res.status(400).send({
+        Status: false,
+        message: "User not found in the leader database.",
+      });
+    }
+
+    // Extract leader details
+    const {
+      firstname,
+      lastname,
+      email,
+      dob,
+      education,
+      profession,
+      location,
+      familymembers,
+      profile_img,
+      languages,
+    } = leaderUser;
+
+    // Check if the citizen already exists
+    const existingCitizenUser = await citiZenUsermaster.findOne({
+      mobilenumber,
+    });
+
+    if (existingCitizenUser) {
+      return res.status(400).send({
+        Status: false,
+        message: "User already exists in the citizen database.",
+      });
+    }
+
+    // Create a new citizen entry
+    const newCitizenUser = new citiZenUsermaster({
+      mobilenumber,
+      firstname,
+      lastname,
+      email,
+      dob,
+      education,
+      profession,
+      location,
+      familymembers,
+      profile_img,
+      languages,
+      otp: true,
+      profile: true,
+      customer_Id: null,
+    });
+
+    const savedCitizenUser = await newCitizenUser.save();
+
+    if (!savedCitizenUser) {
+      return res.status(500).send({
+        Status: false,
+        message: "Failed to save citizen user in the database.",
+      });
+    }
+
+    // Integrate with Razorpay if needed
+    const razorpayGlobalInstance = new Razorpay({
+      key_id: "rzp_test_1d8Uz0Rqn101Hj",
+      key_secret: "DREkz3zAKcStej7cslGOdYLy",
+    });
+
+    try {
+      const customersList = await razorpayGlobalInstance.customers.all();
+
+      const existingCustomer = customersList.items.find(
+        (customer) => customer.contact === savedCitizenUser.mobilenumber
+      );
+
+      let razorpayCustomerId;
+
+      if (existingCustomer) {
+        razorpayCustomerId = existingCustomer.id;
+      } else {
+        const newCustomer = await razorpayGlobalInstance.customers.create({
+          name: `${firstname} ${lastname}`,
+          contact: savedCitizenUser.mobilenumber,
+          email: email || null,
+          notes: { profession },
+        });
+
+        razorpayCustomerId = newCustomer.id;
+      }
+
+      savedCitizenUser.customer_Id = razorpayCustomerId;
+      await savedCitizenUser.save();
+
+      return res.status(200).send({
+        Status: true,
+        message: "User registered successfully, profile created, and Razorpay customer ID linked.",
+        savedCitizenUser,
+      });
+    } catch (error) {
+      console.error("Error while handling Razorpay customers:", error);
+      return res.status(500).json({
+        Status: false,
+        message: "Error handling Razorpay customers",
+        error,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send({
+      Status: "Error",
+      message: "Something went wrong",
+    });
+  }
+};
+
+
+
+
 exports.registrationCounsellorWithSos = async (req, res) => {
   try {
     const { mobilenumber, token, device_id } = req.body;
@@ -233,7 +487,7 @@ exports.registrationCounsellorWithSos = async (req, res) => {
       });
 
       if (istherearenot) {
-        const { otp, profile} = istherearenot;
+        const { otp, profile } = istherearenot;
 
 
         const response = istherearenot;
@@ -360,6 +614,8 @@ exports.otpVerifycitizen = async (req, res) => {
   }
 };
 
+
+
 // otp Log in
 exports.otpVerifyleader = async (req, res) => {
   try {
@@ -369,7 +625,9 @@ exports.otpVerifyleader = async (req, res) => {
       const response = await leaderUsermaster.findOne({
         mobilenumber: mobilenumber,
       });
-      
+
+
+
       const otp = response.otp;
 
       if (otp === false && response.profile === false) {
@@ -404,7 +662,7 @@ exports.otpVerifyleader = async (req, res) => {
         const tokenPayload = generateUserTokenPayload(response);
         const tokens = generateTokensObject(tokenPayload);
         return res
-          .status(400)
+          .status(200)
           .send({
             Status: "false",
             message: "otp verified already",
@@ -445,7 +703,7 @@ exports.otpVerifyCounsellingWithSos = async (req, res) => {
         .send({ Status: "false", message: "Mobile number not found" });
     }
 
-   
+
     const { sos_status, otp, profile } = response;
 
     if (otp === true && sos_status === "pending") {
@@ -647,19 +905,19 @@ exports.loginViaOtpConselingWithSOS = async (req, res) => {
     });
 
     console.log(user, "{{{{{{{{{{{{}}}}}}}}}}}}");
-    
+
 
     if (user) {
       const { otp, profile, sos_status } = user;
 
       if (profile && otp) {
         const response = await leaderUsermaster.findOne({ mobilenumber });
-    
+
         if (sos_status === "pending" || sos_status === "rejected") {
-            return res.status(400).send({
-              Status: false,
-              message: "Your SOS status is not approved by admin",
-            });
+          return res.status(400).send({
+            Status: false,
+            message: "Your SOS status is not approved by admin",
+          });
         };
 
         if (response) {
@@ -2390,6 +2648,10 @@ exports.likePost = async (req, res) => {
     return res.status(400).json({ Status: "Error", Error });
   }
 };
+
+
+
+
 exports.getLikesOfPost = async (req, res) => {
   try {
     const { post_id } = req.body;
@@ -5437,35 +5699,35 @@ exports.deeplink = async (req, res) => {
 
 exports.createSos = async (req, res) => {
   try {
-    const { citizen_id, latitude, longitude, text , types_of_danger, local_Police_Helpline } = req.body;
+    const { citizen_id, latitude, longitude, text, types_of_danger, local_Police_Helpline } = req.body;
 
 
 
-    console.log("data" , types_of_danger);
+    console.log("data", types_of_danger);
     const senderLocation = {
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
     };
-    
+
     const citizenObjectId = new mongoose.Types.ObjectId(citizen_id);
     if (!mongoose.Types.ObjectId.isValid(citizenObjectId)) {
       return res.status(400).json({ status: false, message: "Invalid citizen_id format" });
     }
 
-    
+
 
 
     const partner2 = await citiZenUsermaster.findOne(
       { _id: citizenObjectId },
       { firstname: 1, mobilenumber: 1, _id: 1, profile_img: 1, token: 1 }
     );
-    
-    
+
+
     const names = partner2.firstname;
     const profile_img = partner2.profile_img;
-    
+
     console.log(names, profile_img);
-    
+
     const partnerData = await locations
       .find({
         "location.latitude": {
@@ -5481,18 +5743,18 @@ exports.createSos = async (req, res) => {
       .sort({ _id: -1 });
 
 
-      console.log("partner Data" ,  partnerData);
-      
+    console.log("partner Data", partnerData);
+
 
     const partnerDataUserIds = partnerData.map((partner) => partner.user_id);
     const randomNumber = Math.floor(Math.random() * 1000000);
     const profileID = `sos${randomNumber}`;
-    console.log("{{{{{{{{{{{{{{",profileID);
+    console.log("{{{{{{{{{{{{{{", profileID);
 
     const tokens = partnerData.map((partner) => partner.user_id._id);
-    console.log("{{{{{{{{{{{{{ tokes",tokens);
+    console.log("{{{{{{{{{{{{{ tokes", tokens);
 
-    
+
 
     const notification = {
       title: "ShePower",
@@ -5507,7 +5769,7 @@ exports.createSos = async (req, res) => {
     //   .messaging()
     //   .sendToDevice(tokens, { notification, data });
 
-      // console.log("{{{{{{{{{{{{{{{{{{{{{{",response);
+    // console.log("{{{{{{{{{{{{{{{{{{{{{{",response);
     let result;
     if (req.file) {
       const attachment = req.file.filename;
@@ -5564,7 +5826,7 @@ exports.createSos = async (req, res) => {
     console.log("Error:", err);
     return res
       .status(500)
-      .json({ status: false, message: "Something went wrong"  , err});
+      .json({ status: false, message: "Something went wrong", err });
   }
 };
 

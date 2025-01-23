@@ -141,7 +141,6 @@ exports.createProfileCitizen = async (req, res) => {
 
 
 
-const leaderCustomerMap = new Map();
 
 
 // profile for leader 
@@ -433,7 +432,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
     // }
 
     const randomNumber = Math.floor(Math.random() * 1000000);
-    const profileID = `Leader${randomNumber}`;
+    const profileID = `Leadersos${randomNumber}`;
     console.log(profileID);
 
     const check = await leaderUsermaster.updateOne(
