@@ -469,6 +469,147 @@ exports.registrationLeaderToCitizen = async (req, res) => {
   }
 };
 
+exports.registrationcitizenToCounselingSOS = async (req, res) => {
+  try {
+    const { mobilenumber, id_card, address_proof, certificate_ngo_or_institute } = req.body;
+
+    // Validate request body
+    if (
+      !mobilenumber ||
+      !id_card?.front ||
+      !id_card?.back ||
+      !address_proof?.front ||
+      !address_proof?.back ||
+      !certificate_ngo_or_institute?.front ||
+      !certificate_ngo_or_institute?.back
+    ) {
+      return res.status(400).json({
+        status: false,
+        message: "Mobile number and required documents are mandatory.",
+      });
+    }
+
+    // Fetch citizen user data
+    const citizenUser = await citiZenUsermaster.findOne({ mobilenumber });
+    if (!citizenUser) {
+      return res.status(404).json({
+        status: false,
+        message: "Citizen not found.",
+      });
+    }
+
+    // Extract citizen data
+    const {
+      firstname,
+      lastname,
+      email,
+      dob,
+      education,
+      profession,
+      location,
+      familymembers,
+      profile_img,
+      languages,
+    } = citizenUser;
+
+    // Check if the user is already a leader
+    const existingLeader = await leaderUsermaster.findOne({ mobilenumber });
+    if (existingLeader) {
+      return res.status(400).json({
+        status: false,
+        message: "User is already a leader (counselor).",
+      });
+    }
+
+    // Create new leader data (Counselor with SOS)
+    const newLeaderUser = new leaderUsermaster({
+      mobilenumber,
+      firstname,
+      lastname,
+      email,
+      dob,
+      education,
+      profession,
+      location,
+      familymembers,
+      profile_img,
+      languages,
+      user_type: "counsellorWithSos",
+      id_card: {
+        front: id_card.front,
+        back: id_card.back,
+      },
+      address_proof: {
+        front: address_proof.front,
+        back: address_proof.back,
+      },
+      certificate_ngo_or_institute: {
+        front: certificate_ngo_or_institute.front,
+        back: certificate_ngo_or_institute.back,
+      },
+      otp: true,
+      profile: true,
+      sos_status: "pending", // Default SOS status
+    });
+
+    // Save the new leader user
+    const savedLeader = await newLeaderUser.save();
+
+    // Razorpay customer creation or retrieval
+    const razorpayGlobalInstance = new Razorpay({
+      key_id: "rzp_test_1d8Uz0Rqn101Hj",
+      key_secret: "DREkz3zAKcStej7cslGOdYLy",
+    });
+
+    let razorpayCustomerId;
+
+    try {
+      const customersList = await razorpayGlobalInstance.customers.all();
+      const existingCustomer = customersList.items.find(
+        (customer) => customer.contact === mobilenumber
+      );
+     
+
+      if (existingCustomer) {
+        razorpayCustomerId = existingCustomer.id;
+      } else {
+        const newCustomer = await razorpayGlobalInstance.customers.create({
+          name: `${firstname} ${lastname}`,
+          contact: savedLeader.mobilenumber,
+          email: email || null,
+          notes: { profession },
+        });
+
+        razorpayCustomerId = newCustomer.id;
+      }
+
+      savedLeader.customer_Id = razorpayCustomerId;
+      await savedLeader.save();
+
+      return res.status(200).json({
+        status: true,
+        message: "User successfully registered as a leader with Razorpay ID linked.",
+        savedLeader,
+      });
+    } catch (razorpayError) {
+      console.error("Razorpay Error:", razorpayError);
+      return res.status(500).json({
+        status: false,
+        message: "Error integrating with Razorpay.",
+        error: razorpayError,
+      });
+    }
+  } catch (error) {
+    console.error("Error in registrationCitizenToCounselingSOS API:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error during citizen-to-counselor conversion.",
+    });
+  }
+};
+
+
+
 
 
 
