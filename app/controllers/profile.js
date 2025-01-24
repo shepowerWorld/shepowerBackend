@@ -166,7 +166,10 @@ exports.createProfileLeader = async (req, res) => {
       location,
     } = req.body;
 
-    if (!_id || !firstname || !lastname || !mobileNumber) {
+    console.log(req.body , "{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}");
+    
+
+    if (!_id || !firstname || !lastname) {
       return res.status(401).json({ status: false, message: "Please provide all the details" });
     }
 
@@ -178,18 +181,20 @@ exports.createProfileLeader = async (req, res) => {
 
     try {
       // Fetch all customers from Razorpay
+     
       const customersList = await razorpayGlobalInstance.customers.all();
-      console.log("Razorpay Customers:", customersList);
+     
 
       // Check if a customer with the provided mobile number already exists
       const existingCustomer = customersList.items.find(
-        (customer) => customer.contact === mobileNumber
+        (customer) => customer.contact == mobileNumber
       );
-
+      
+      
       if (existingCustomer) {
         // Use the existing customer ID
         razorpayCustomerId = existingCustomer.id;
-        console.log("Existing Razorpay Customer Found:", razorpayCustomerId);
+        
       } else {
         // Create a new customer if no matching customer is found
         const newCustomer = await razorpayGlobalInstance.customers.create({
@@ -200,7 +205,7 @@ exports.createProfileLeader = async (req, res) => {
         });
 
         razorpayCustomerId = newCustomer.id;
-        console.log("New Razorpay Customer Created:", newCustomer);
+       
       }
     } catch (error) {
       console.error("Error while handling Razorpay customers:", error);
