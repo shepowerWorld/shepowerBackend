@@ -290,8 +290,8 @@ route.put('/updateScheme/:_id' , authMiddleware , adminController.updateGovSchem
 route.post('/addNotifications' , authMiddleware , adminController.createNotification);
 route.post("/uploadimage" ,s3.upload.single('file'),adminController.uploadShepowerFile);
 route.get('/getNotifications' , adminController.getActiveNotifications);
-route.get('/getAllCounsellingPending' , authMiddleware, profileController.getPendingProfilesConsellingWithSos);
-route.put('/updateSosStatus' , authMiddleware , adminController.updateSosStatus);
+route.get('/getAllCounsellingPending' , profileController.getPendingProfilesConsellingWithSos);
+route.put('/updateSosStatus'  , adminController.updateSosStatus);
 route.get('/getAllUsers',authMiddleware,adminController.getAllUsers);
 route.post('/newusers',authMiddleware,adminController.newusers);
 route.put('/editNotifications/:id' , authMiddleware , adminController.updateNotification);

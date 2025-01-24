@@ -673,6 +673,18 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
       });
     }
 
+
+    const existingCitizenUser = await citiZenUsermaster.findOne({
+      mobilenumber,
+    });
+
+    if (existingCitizenUser) {
+      return res.status(400).send({
+        Status: false,
+        message: "User already exists in the citizen database.",
+      });
+    }
+
     // Check if the user is registered as a counselor with SOS
     const existingCounsellor = await leaderUsermaster.findOne({
       mobilenumber: mobilenumber,
@@ -682,7 +694,7 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
     if (!existingCounsellor) {
       return res.status(404).json({
         status: false,
-        message: "Counselor with SOS not found. Please register as a citizen.",
+        message: "Counselor with SOS not found.",
       });
     }
 
@@ -708,6 +720,11 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
         message: "User already registered as a citizen. Please log in.",
       });
     }
+
+    const randomNumber = Math.floor(Math.random() * 1000000);
+    const profileID = `citizen${randomNumber}`;
+    console.log(profileID);
+
 
     // Create new citizen user
     const newCitizenUser = new citiZenUsermaster({
@@ -784,7 +801,7 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
     console.error("Error in registrationCounselorToCitizen API:", error);
     return res.status(500).json({
       status: false,
-      message: "Internal server error during counselor-to-citizen conversion.",
+      message: "Internal server error during counselorsos-to-citizen conversion.",
     });
   }
 };

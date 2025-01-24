@@ -507,12 +507,12 @@ exports.getPendingProfilesConsellingWithSos = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const pendingProfiles = await leaderUsermaster
-      .find({ sos_status: "Pending" })
+      .find({ sos_status: "pending" })
       .skip(skip)
       .limit(limit);
 
 
-    const totalProfiles = await leaderUsermaster.countDocuments({ sos_status: "Pending" });
+    const totalProfiles = await leaderUsermaster.countDocuments({ sos_status: "pending" });
 
     if (pendingProfiles.length === 0) {
       return res.status(200).json({ status: false, message: "No pending profiles found" });
