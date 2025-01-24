@@ -317,7 +317,7 @@ exports.registrationCitizentoLeader = async (req, res) => {
       console.log(customersList);
       // Check if a customer with the provided mobile number already exists
       const existingCustomer = customersList.items.find(
-        (customer) => customer.contact === savedLeaderUser.mobilenumber
+        (customer) => customer.contact == savedLeaderUser.mobilenumber
       );
 
       let razorpayCustomerId;
@@ -444,6 +444,9 @@ exports.registrationLeaderToCitizen = async (req, res) => {
       customer_Id: null,
     });
 
+
+    console.log(newCitizenUser, "{{{{{}}}}}")
+
     const savedCitizenUser = await newCitizenUser.save();
 
     if (!savedCitizenUser) {
@@ -459,15 +462,17 @@ exports.registrationLeaderToCitizen = async (req, res) => {
       key_secret: "DREkz3zAKcStej7cslGOdYLy",
     });
 
+    let razorpayCustomerId;
+
     try {
       const customersList = await razorpayGlobalInstance.customers.all();
 
       const existingCustomer = customersList.items.find(
-        (customer) => customer.contact === savedCitizenUser.mobilenumber
+        (customer) => customer.contact == savedCitizenUser.mobilenumber
       );
-
-      let razorpayCustomerId;
-
+      
+      console.log(existingCustomer , "{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}")
+    
       if (existingCustomer) {
         razorpayCustomerId = existingCustomer.id;
       } else {
@@ -613,10 +618,10 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
     try {
       const customersList = await razorpayGlobalInstance.customers.all();
       const existingCustomer = customersList.items.find(
-        (customer) => customer.contact === mobilenumber
+        (customer) => customer.contact == mobilenumber
       );
      
-
+      
       if (existingCustomer) {
         razorpayCustomerId = existingCustomer.id;
       } else {
