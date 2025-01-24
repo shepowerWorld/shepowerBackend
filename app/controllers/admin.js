@@ -125,16 +125,14 @@ exports.createGovScheme = async (req, res) => {
 
 exports.getAllStatesGovSchemes = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+   
 
-    const skip = (page - 1) * limit;
+    
 
     const govSchemes = await Govscheme.find({ locationType: 'state' })
-      .skip(skip)
-      .limit(limit);
+  
 
-    const total = await Govscheme.countDocuments({ locationType: 'state' });
+    
 
     if (!govSchemes || govSchemes.length === 0) {
       return res.status(404).json({ status: false, message: "No state gov schemes found" });
@@ -144,12 +142,7 @@ exports.getAllStatesGovSchemes = async (req, res) => {
       status: true,
       message: "State gov schemes retrieved successfully",
       data: govSchemes,
-      pagination: {
-        totalItems: total,
-        totalPages: Math.ceil(total / limit), 
-        currentPage: page,
-        itemsPerPage: limit
-      }
+
     });
   } catch (err) {
     console.error("Error fetching state gov schemes:", err);

@@ -223,6 +223,94 @@ exports.registrationleader = async (req, res) => {
 };
 
 
+exports.registrationCounsellorWithSos = async (req, res) => {
+  try {
+    const { mobilenumber, token, device_id } = req.body;
+
+    console.log(req.body);
+    
+   
+    if (!mobilenumber) {
+      return res
+        .status(400)
+        .send({ Status: false, message: "Please provide Mobile number" });
+    } else if (mobilenumber) {
+
+      const istherearenot = await leaderUsermaster.findOne({
+        mobilenumber: mobilenumber,
+        user_type : "counsellorWithSos"
+      });
+      
+      console.log(istherearenot , "{{{{{{{{{{{{}}}}}}}}")
+      if (istherearenot) {
+        const { otp, profile } = istherearenot;
+        console.log(istherearenot);
+        
+
+        const response = istherearenot;
+
+
+        if (otp === true && profile === true) {
+          return res
+            .status(400)
+            .send({
+              Status: false,
+              message: "You have already registered with Shepower",
+              istherearenot,
+            });
+        } else if (otp === true && profile === false) {
+          const tokenPayload = generateUserTokenPayload(response);
+          const tokens = generateTokensObject(tokenPayload);
+          return res
+            .status(200)
+            .send({ Status: false, message: "OTP verified", response, tokens });
+        } else if (otp === false && profile === false) {
+          return res
+            .status(200)
+            .send({ Status: true, message: "Otp sent on mobile successfully" });
+        }
+      } else if (!istherearenot) {
+        const user = new leaderUsermaster({
+          mobilenumber: mobilenumber,
+          token: token,
+          user_type: "counsellorWithSos", // Setting user_type for this API
+        });
+        const response = await user.save();
+
+        const check = new locgoutCheck({
+          user_id: response._id,
+          newdevice_id: device_id,
+          token: token,
+        });
+        await check.save();
+
+        if (response) {
+          return res
+            .status(200)
+            .send({
+              Status: true,
+              message: "Otp sent successfully to your mobile number",
+            });
+        } else {
+          return res
+            .status(400)
+            .send({ Status: false, message: "Something went wrong" });
+        }
+      } else {
+        return res
+          .status(400)
+          .send({ Status: false, message: "Already registered" });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(400)
+      .send({ Status: "Error", message: "Something went wrong" });
+  }
+};
+
+
 exports.registrationCitizentoLeader = async (req, res) => {
   try {
     const { mobilenumber } = req.body;
@@ -738,7 +826,7 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
 
     // Save the new citizen user
     const savedCitizen = await newCitizenUser.save();
-    
+
     let razorpayCustomerId 
     // Razorpay customer creation or linking
     const razorpayGlobalInstance = new Razorpay({
@@ -801,84 +889,7 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
 
 
 
-exports.registrationCounsellorWithSos = async (req, res) => {
-  try {
-    const { mobilenumber, token, device_id } = req.body;
 
-    if (!mobilenumber) {
-      return res
-        .status(400)
-        .send({ Status: false, message: "Please provide Mobile number" });
-    } else if (mobilenumber) {
-
-      const istherearenot = await leaderUsermaster.findOne({
-        mobilenumber: mobilenumber,
-      });
-
-      if (istherearenot) {
-        const { otp, profile } = istherearenot;
-
-
-        const response = istherearenot;
-        if (otp === true && profile === true) {
-          return res
-            .status(400)
-            .send({
-              Status: false,
-              message: "You have already registered with Shepower",
-              istherearenot,
-            });
-        } else if (otp === true && profile === false) {
-          const tokenPayload = generateUserTokenPayload(response);
-          const tokens = generateTokensObject(tokenPayload);
-          return res
-            .status(200)
-            .send({ Status: false, message: "OTP verified", response, tokens });
-        } else if (otp === false && profile === false) {
-          return res
-            .status(200)
-            .send({ Status: true, message: "Otp sent on mobile successfully" });
-        }
-      } else if (!istherearenot) {
-        const user = new leaderUsermaster({
-          mobilenumber: mobilenumber,
-          token: token,
-          user_type: "counsellorWithSos", // Setting user_type for this API
-        });
-        const response = await user.save();
-
-        const check = new locgoutCheck({
-          user_id: response._id,
-          newdevice_id: device_id,
-          token: token,
-        });
-        await check.save();
-
-        if (response) {
-          return res
-            .status(200)
-            .send({
-              Status: true,
-              message: "Otp sent successfully to your mobile number",
-            });
-        } else {
-          return res
-            .status(400)
-            .send({ Status: false, message: "Something went wrong" });
-        }
-      } else {
-        return res
-          .status(400)
-          .send({ Status: false, message: "Already registered" });
-      }
-    }
-  } catch (err) {
-    console.log(err);
-    return res
-      .status(400)
-      .send({ Status: "Error", message: "Something went wrong" });
-  }
-};
 
 
 // exports.registrationCounsellorWithSos = async (req, res) => {
