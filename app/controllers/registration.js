@@ -568,7 +568,7 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
     } = citizenUser;
 
     const randomNumber = Math.floor(Math.random() * 1000000);
-    const profileID = `Leader${randomNumber}`;
+    const profileID = `Leadersos${randomNumber}`;
     console.log(profileID);
 
     // Create new leader data (Counselor with SOS)
@@ -661,6 +661,133 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
 };
 
 
+exports.registrationCounselingSOSToCitizen = async (req, res) => {
+  try {
+    const { mobilenumber } = req.body;
+
+    // Validate mobile number
+    if (!mobilenumber) {
+      return res.status(400).json({
+        status: false,
+        message: "Mobile number is mandatory.",
+      });
+    }
+
+    // Check if the user is registered as a counselor with SOS
+    const existingCounsellor = await leaderUsermaster.findOne({
+      mobilenumber: mobilenumber,
+      user_type: "counsellorWithSos",
+    });
+
+    if (!existingCounsellor) {
+      return res.status(404).json({
+        status: false,
+        message: "Counselor with SOS not found. Please register as a citizen.",
+      });
+    }
+
+    // Extract data from counselor record
+    const {
+      firstname,
+      lastname,
+      email,
+      dob,
+      education,
+      profession,
+      location,
+      familymembers,
+      profile_img,
+      languages,
+    } = existingCounsellor;
+
+    // Check if the user is already registered as a citizen
+    const existingCitizen = await citiZenUsermaster.findOne({ mobilenumber });
+    if (existingCitizen) {
+      return res.status(200).json({
+        status: true,
+        message: "User already registered as a citizen. Please log in.",
+      });
+    }
+
+    // Create new citizen user
+    const newCitizenUser = new citiZenUsermaster({
+      mobilenumber,
+      firstname,
+      lastname,
+      email,
+      dob,
+      education,
+      profession,
+      location,
+      familymembers,
+      profile_img,
+      languages,
+      profileID: profileID,
+      otp: true,
+      profile: true,
+      customer_Id: null,
+    });
+
+    // Save the new citizen user
+    const savedCitizen = await newCitizenUser.save();
+
+    // Razorpay customer creation or linking
+    const razorpayGlobalInstance = new Razorpay({
+      key_id: "rzp_test_1d8Uz0Rqn101Hj",
+      key_secret: "DREkz3zAKcStej7cslGOdYLy",
+    });
+
+    try {
+      let razorpayCustomerId = customer_Id;
+
+      if (!customer_Id) {
+        const customersList = await razorpayGlobalInstance.customers.all();
+        const existingCustomer = customersList.items.find(
+          (customer) => customer.contact == mobilenumber
+        );
+
+        if (existingCustomer) {
+          razorpayCustomerId = existingCustomer.id;
+        } else {
+          const newCustomer = await razorpayGlobalInstance.customers.create({
+            name: `${firstname} ${lastname}`,
+            contact: mobilenumber,
+            email: email || null,
+            notes: { profession },
+          });
+
+          razorpayCustomerId = newCustomer.id;
+        }
+      }
+
+      // Update Razorpay customer ID for the new citizen user
+      savedCitizen.customer_Id = razorpayCustomerId;
+      await savedCitizen.save();
+
+      // Optional: Remove the counselor record after successful registration
+      await leaderUsermaster.deleteOne({ mobilenumber, user_type: "counsellorWithSos" });
+
+      return res.status(200).json({
+        status: true,
+        message: "User successfully registered as a citizen with Razorpay ID linked.",
+        savedCitizen,
+      });
+    } catch (razorpayError) {
+      console.error("Razorpay Error:", razorpayError);
+      return res.status(500).json({
+        status: false,
+        message: "Error integrating with Razorpay.",
+        error: razorpayError,
+      });
+    }
+  } catch (error) {
+    console.error("Error in registrationCounselorToCitizen API:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error during counselor-to-citizen conversion.",
+    });
+  }
+};
 
 
 
