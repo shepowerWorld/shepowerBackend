@@ -34,7 +34,7 @@ route.post('/registrationcounsellingSos', regisController.registrationCounsellor
 route.post('/registrationcitizentoleader', regisController.registrationCitizentoLeader)
 route.post('/registrationLeaderToCitizen', regisController.registrationLeaderToCitizen)
 route.post('/registrationcitizenToCounselingSOS', regisController.registrationcitizenToCounselingSOS)
-route.post('/registrationcitizenToCounselingSOS', regisController.registrationCounselingSOSToCitizen)
+route.post('/registrationCounselingSOSTocitizen', regisController.registrationCounselingSOSToCitizen)
 
 
 route.post('/otpVerifycitizen',regisController.otpVerifycitizen)
