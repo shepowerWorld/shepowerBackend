@@ -679,7 +679,7 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
     });
 
     if (existingCitizenUser) {
-      return res.status(400).send({
+      return res.status(200).send({
         Status: false,
         message: "User already exists in the citizen database.",
       });
@@ -711,15 +711,6 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
       profile_img,
       languages,
     } = existingCounsellor;
-
-    // Check if the user is already registered as a citizen
-    const existingCitizen = await citiZenUsermaster.findOne({ mobilenumber });
-    if (existingCitizen) {
-      return res.status(200).json({
-        status: true,
-        message: "User already registered as a citizen. Please log in.",
-      });
-    }
 
     const randomNumber = Math.floor(Math.random() * 1000000);
     const profileID = `citizen${randomNumber}`;
