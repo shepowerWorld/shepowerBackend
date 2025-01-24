@@ -343,7 +343,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
       proffession,
       familymembers = [],
       languages = [],
-      movies = [ ],
+      movies = [],
       music = [],
       books = [],
       dance = [],
@@ -355,12 +355,17 @@ exports.createProfileConselingWithSos = async (req, res) => {
       certificate_ngo_or_institute = {},
     } = req.body;
 
+    console.log(req.body, "{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}");
+
     if (!_id || !firstname || !lastname || !mobileNumber) {
       return res.status(500).json({ status: false, message: "Please provide all the details" });
     }
 
+   
+    
+
     const response = await leaderUsermaster.findOne({ _id: _id });
-    console.log(response.mobilenumber, "response")
+    // console.log(response.mobilenumber, "response")
 
     let razorpayCustomerId;
     
@@ -474,8 +479,11 @@ exports.createProfileConselingWithSos = async (req, res) => {
     );
 
     if (check && check1) {
-      await leaderUsermaster.findOneAndUpdate({ _id: _id }, { $set: { profile: true } });
-      const response = await leaderUsermaster.findOne({ _id: _id });
+      console.log(check , check1 , "{{{{{{{{{check condition }}}}}}}}}");
+      
+      const updatedData = await leaderUsermaster.findOneAndUpdate({ _id: _id }, { $set: { profile: true } });
+      console.log(updatedData, "{{{{{{{{{{{{{{{{updated data }}}}}}}}}}}")
+      const response = await leaderUsermaster.findOne({ _id: updatedData._id });
       return res.status(200).json({ status: true, message: "Profile created successfully", response });
     } else {
       return res.status(401).json({ status: false, message: "Could not create a profile, try later" });

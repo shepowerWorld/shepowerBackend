@@ -28,10 +28,13 @@ const registrationcitizen = require('../models/registrationcitizen');
 //login module
 route.post('/registrationcitizen',regisController.registrationcitizen)
 route.post('/registrationleader',regisController.registrationleader)
+route.post('/registrationcounsellingSos', regisController.registrationCounsellorWithSos)
+
+// switch
 route.post('/registrationcitizentoleader', regisController.registrationCitizentoLeader)
 route.post('/registrationLeaderToCitizen', regisController.registrationLeaderToCitizen)
 route.post('/registrationcitizenToCounselingSOS', regisController.registrationcitizenToCounselingSOS)
-route.post('/registrationcounsellingSos', regisController.registrationCounsellorWithSos)
+
 route.post('/otpVerifycitizen',regisController.otpVerifycitizen)
 route.post('/otpVerifyleader',regisController.otpVerifyleader)
 route.post('/loginViaOtpcitizen',regisController.loginViaOtpcitizen)
@@ -46,10 +49,9 @@ route.post('/findleaders',authMiddleware,regisController.findleaders)
 //profilecontroller
 route.put('/createProfileCitizen',authMiddleware,profileController.createProfileCitizen)
 route.put('/createProfileLeader',authMiddleware,profileController.createProfileLeader)
-route.put(
-    '/createProfileConselingWithSos',  // Middleware for compressing and uploading files to S3
-  authMiddleware, profileController.createProfileConselingWithSos // Controller to handle profile creation
-  );
+route.put('/createProfileConselingWithSos', authMiddleware, profileController.createProfileConselingWithSos);
+
+
 route.post("/uploadidcardfrontimage" ,s3.upload.single('file'),profileController.uploadShepoweridcardfrontFile);
 route.post("/uploadidcardbackimage" ,s3.upload.single('file'),profileController.uploadShepoweridcardbackFile);
 route.post("/uploadaddressfrontimage" ,s3.upload.single('file'),profileController.uploadShepoweraddressprooffrontFile);

@@ -145,6 +145,7 @@ exports.registrationleader = async (req, res) => {
 
       const istherearenot = await leaderUsermaster.findOne({
         mobilenumber: mobilenumber,
+        user_type: "Counsellor"
       });
 
      
@@ -181,20 +182,21 @@ exports.registrationleader = async (req, res) => {
           user_type: "Counsellor",
           sos_status: null
         });
-        const response = "demo"
+        const response = await user.save();
 
-        // await user.save();
+    
 
         const check = new locgoutCheck({
           user_id: response._id,
           newdevice_id: device_id,
           token: token,
-
         });
-        // await check.save();
+
+        await check.save();
+
         if (response) {
-          // const tokenPayload = generateUserTokenPayload(response);
-          // const tokens = generateTokensObject(tokenPayload);
+          const tokenPayload = generateUserTokenPayload(response);
+          const tokens = generateTokensObject(tokenPayload);
           return res
             .status(200)
             .send({
@@ -229,6 +231,18 @@ exports.registrationCitizentoLeader = async (req, res) => {
       return res
         .status(400)
         .send({ Status: false, message: "Please provide a mobile number" });
+    }
+
+    const existingLeader = await leaderUsermaster.findOne({
+      mobilenumber: mobilenumber,
+      user_type: "Counsellor"
+     });
+
+    if (existingLeader) {
+      return res.status(200).send({
+        Status: true,
+        message: "User already registered as a leader. Please log in.",
+      });
     }
 
    
@@ -334,6 +348,7 @@ exports.registrationCitizentoLeader = async (req, res) => {
         error,
       });
     }
+
   } catch (err) {
     console.error(err);
     return res.status(400).send({
@@ -351,6 +366,15 @@ exports.registrationLeaderToCitizen = async (req, res) => {
       return res
         .status(400)
         .send({ Status: false, message: "Please provide a mobile number" });
+    }
+
+    const existingCitizen = await citiZenUsermaster.findOne({mobilenumber});
+
+    if (existingCitizen) {
+      return res.status(200).send({
+        Status: true,
+        message: "User already registered as a Citizen. Please log in.",
+      });
     }
 
     // Check if the leader exists in the leader database
@@ -489,6 +513,19 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
       });
     }
 
+    const existingCounsellersos = await leaderUsermaster.findOne({
+      mobilenumber: mobilenumber,
+      user_type: "counsellorWithSos"
+    });
+
+    if (existingCounsellersos) {
+      return res.status(200).send({
+        Status: true,
+        message: "User already registered as a counsellorWithSos. Please log in.",
+      });
+    }
+
+
     // Fetch citizen user data
     const citizenUser = await citiZenUsermaster.findOne({ mobilenumber });
     if (!citizenUser) {
@@ -511,15 +548,6 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
       profile_img,
       languages,
     } = citizenUser;
-
-    // Check if the user is already a leader
-    const existingLeader = await leaderUsermaster.findOne({ mobilenumber });
-    if (existingLeader) {
-      return res.status(400).json({
-        status: false,
-        message: "User is already a leader (counselor).",
-      });
-    }
 
     // Create new leader data (Counselor with SOS)
     const newLeaderUser = new leaderUsermaster({
@@ -613,66 +641,154 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
 
 
 
+// exports.registrationCounsellorWithSos = async (req, res) => {
+//   try {
+//     const { mobilenumber, token, device_id } = req.body;
+
+//     if (!mobilenumber) {
+//       return res
+//         .status(400)
+//         .send({ Status: false, message: "Please provide Mobile number" });
+//     } else if (mobilenumber) {
+
+//       const istherearenot = await leaderUsermaster.findOne({
+//         mobilenumber: mobilenumber,
+//       });
+
+//       if (istherearenot) {
+//         const { otp, profile } = istherearenot;
+
+
+//         const response = istherearenot;
+//         if (otp === true && profile === true) {
+//           return res
+//             .status(400)
+//             .send({
+//               Status: false,
+//               message: "You have already registered with Shepower",
+//               istherearenot,
+//             });
+//         } else if (otp === true && profile === false) {
+//           const tokenPayload = generateUserTokenPayload(response);
+//           const tokens = generateTokensObject(tokenPayload);
+//           return res
+//             .status(200)
+//             .send({ Status: false, message: "OTP verified", response, tokens });
+//         } else if (otp === false && profile === false) {
+//           return res
+//             .status(200)
+//             .send({ Status: true, message: "Otp sent on mobile successfully" });
+//         }
+//       } else if (!istherearenot) {
+//         const user = new leaderUsermaster({
+//           mobilenumber: mobilenumber,
+//           token: token,
+//           user_type: "counsellorWithSos", // Setting user_type for this API
+//         });
+//         const response = await user.save();
+
+//         const check = new locgoutCheck({
+//           user_id: response._id,
+//           newdevice_id: device_id,
+//           token: token,
+//         });
+//         await check.save();
+
+//         if (response) {
+//           return res
+//             .status(200)
+//             .send({
+//               Status: true,
+//               message: "Otp sent successfully to your mobile number",
+//             });
+//         } else {
+//           return res
+//             .status(400)
+//             .send({ Status: false, message: "Something went wrong" });
+//         }
+//       } else {
+//         return res
+//           .status(400)
+//           .send({ Status: false, message: "Already registered" });
+//       }
+//     }
+//   } catch (err) {
+//     console.log(err);
+//     return res
+//       .status(400)
+//       .send({ Status: "Error", message: "Something went wrong" });
+//   }
+// };
+
+
 exports.registrationCounsellorWithSos = async (req, res) => {
   try {
     const { mobilenumber, token, device_id } = req.body;
 
+    // Check if mobilenumber is provided
     if (!mobilenumber) {
       return res
         .status(400)
         .send({ Status: false, message: "Please provide Mobile number" });
     } else if (mobilenumber) {
-
-      const istherearenot = await leaderUsermaster.findOne({
+      // Check if user already exists
+      const isExistingUser = await leaderUsermaster.findOne({
         mobilenumber: mobilenumber,
+        user_type: "counsellorWithSos",
       });
 
-      if (istherearenot) {
-        const { otp, profile } = istherearenot;
+      if (isExistingUser) {
+        const { otp, profile, sos_status } = isExistingUser;
 
-
-        const response = istherearenot;
-        if (otp === true && profile === true) {
+        if (otp === true && profile === true && sos_status === true) {
+          return res.status(400).send({
+            Status: false,
+            message: "You are already registered with Counseling with SOS",
+            user: isExistingUser,
+          });
+        } else if (otp === true && profile === false) {
+          const tokenPayload = generateUserTokenPayload(isExistingUser);
+          const tokens = generateTokensObject(tokenPayload);
           return res
             .status(400)
             .send({
               Status: false,
-              message: "You have already registered with Shepower",
-              istherearenot,
+              message: "OTP verified but profile is incomplete",
+              user: isExistingUser,
+              tokens,
             });
-        } else if (otp === true && profile === false) {
-          const tokenPayload = generateUserTokenPayload(response);
-          const tokens = generateTokensObject(tokenPayload);
-          return res
-            .status(200)
-            .send({ Status: false, message: "OTP verified", response, tokens });
         } else if (otp === false && profile === false) {
           return res
             .status(200)
-            .send({ Status: true, message: "Otp sent on mobile successfully" });
+            .send({ Status: true, message: "OTP sent on mobile successfully" });
         }
-      } else if (!istherearenot) {
-        const user = new leaderUsermaster({
+      } else if (!isExistingUser) {
+        // Create a new user
+        const newUser = new leaderUsermaster({
           mobilenumber: mobilenumber,
           token: token,
-          user_type: "counsellorWithSos", // Setting user_type for this API
+          user_type: "counsellorWithSos",
+          sos_status: null // Default sos_status is null
         });
-        const response = await user.save();
 
-        const check = new locgoutCheck({
-          user_id: response._id,
+        const savedUser = await newUser.save();
+
+        // Save device check details
+        const deviceCheck = new locgoutCheck({
+          user_id: savedUser._id,
           newdevice_id: device_id,
           token: token,
         });
-        await check.save();
 
-        if (response) {
-          return res
-            .status(200)
-            .send({
-              Status: true,
-              message: "Otp sent successfully to your mobile number",
-            });
+        await deviceCheck.save();
+
+        if (savedUser) {
+          const tokenPayload = generateUserTokenPayload(savedUser);
+          const tokens = generateTokensObject(tokenPayload);
+          return res.status(200).send({
+            Status: true,
+            message: "OTP sent successfully to your mobile number",
+          });
         } else {
           return res
             .status(400)
@@ -685,13 +801,12 @@ exports.registrationCounsellorWithSos = async (req, res) => {
       }
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return res
-      .status(400)
+      .status(500)
       .send({ Status: "Error", message: "Something went wrong" });
   }
 };
-
 
 
 exports.otpVerifycitizen = async (req, res) => {
