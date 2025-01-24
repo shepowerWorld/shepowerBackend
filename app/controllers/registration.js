@@ -269,6 +269,11 @@ exports.registrationCitizentoLeader = async (req, res) => {
       languages,
     } = citizenUser;
 
+
+    const randomNumber = Math.floor(Math.random() * 1000000);
+    const profileID = `Leader${randomNumber}`;
+    console.log(profileID);
+
     
     const newLeaderUser = new leaderUsermaster({
       mobilenumber,
@@ -284,6 +289,7 @@ exports.registrationCitizentoLeader = async (req, res) => {
       location,
       familymembers,
       languages,
+      profileID: profileID,
       otp: true, 
       profile: true, 
       customer_Id: null,
@@ -385,7 +391,9 @@ exports.registrationLeaderToCitizen = async (req, res) => {
         Status: false,
         message: "User not found in the leader database.",
       });
-    }
+    };
+
+   
 
     // Extract leader details
     const {
@@ -413,6 +421,10 @@ exports.registrationLeaderToCitizen = async (req, res) => {
       });
     }
 
+    const randomNumber = Math.floor(Math.random() * 1000000);
+    const profileID = `citizen${randomNumber}`;
+    console.log(profileID);
+
     // Create a new citizen entry
     const newCitizenUser = new citiZenUsermaster({
       mobilenumber,
@@ -426,6 +438,7 @@ exports.registrationLeaderToCitizen = async (req, res) => {
       familymembers,
       profile_img,
       languages,
+      profileID: profileID,
       otp: true,
       profile: true,
       customer_Id: null,
@@ -549,6 +562,10 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
       languages,
     } = citizenUser;
 
+    const randomNumber = Math.floor(Math.random() * 1000000);
+    const profileID = `citizen${randomNumber}`;
+    console.log(profileID);
+
     // Create new leader data (Counselor with SOS)
     const newLeaderUser = new leaderUsermaster({
       mobilenumber,
@@ -562,6 +579,7 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
       familymembers,
       profile_img,
       languages,
+      profileID: profileID,
       user_type: "counsellorWithSos",
       id_card: {
         front: id_card.front,
@@ -579,6 +597,7 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
       profile: true,
       sos_status: "pending", // Default SOS status
     });
+    
 
     // Save the new leader user
     const savedLeader = await newLeaderUser.save();
@@ -590,7 +609,7 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
     });
 
     let razorpayCustomerId;
-
+     
     try {
       const customersList = await razorpayGlobalInstance.customers.all();
       const existingCustomer = customersList.items.find(

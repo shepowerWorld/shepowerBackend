@@ -166,8 +166,7 @@ exports.createProfileLeader = async (req, res) => {
       location,
     } = req.body;
 
-    console.log(req.body , "{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}");
-    
+   
 
     if (!_id || !firstname || !lastname) {
       return res.status(401).json({ status: false, message: "Please provide all the details" });
