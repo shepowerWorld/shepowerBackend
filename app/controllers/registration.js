@@ -738,7 +738,8 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
 
     // Save the new citizen user
     const savedCitizen = await newCitizenUser.save();
-
+    
+    let razorpayCustomerId 
     // Razorpay customer creation or linking
     const razorpayGlobalInstance = new Razorpay({
       key_id: "rzp_test_1d8Uz0Rqn101Hj",
@@ -746,14 +747,15 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
     });
 
     try {
-      let razorpayCustomerId = customer_Id;
+      
 
-      if (!customer_Id) {
+      
         const customersList = await razorpayGlobalInstance.customers.all();
         const existingCustomer = customersList.items.find(
           (customer) => customer.contact == mobilenumber
         );
-
+        
+        console.log(existingCustomer)
         if (existingCustomer) {
           razorpayCustomerId = existingCustomer.id;
         } else {
@@ -766,7 +768,6 @@ exports.registrationCounselingSOSToCitizen = async (req, res) => {
 
           razorpayCustomerId = newCustomer.id;
         }
-      }
 
       // Update Razorpay customer ID for the new citizen user
       savedCitizen.customer_Id = razorpayCustomerId;
