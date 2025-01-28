@@ -361,7 +361,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
 
     console.log(req.body, "{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}");
 
-    if (!_id || !firstname || !lastname || !mobileNumber) {
+    if (!_id || !firstname || !lastname) {
       return res.status(500).json({ status: false, message: "Please provide all the details" });
     }
 
@@ -369,7 +369,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
     
 
     const response = await leaderUsermaster.findOne({ _id: _id });
-    // console.log(response.mobilenumber, "response")
+    console.log(response.mobilenumber, "response")
 
     let razorpayCustomerId;
     
@@ -381,7 +381,7 @@ exports.createProfileConselingWithSos = async (req, res) => {
 
       // Check if a customer with the provided mobile number already exists
       const existingCustomer = customersList.items.find(
-        (customer) => customer.contact === mobileNumber
+        (customer) => customer.contact == mobileNumber
       );
 
       if (existingCustomer) {
