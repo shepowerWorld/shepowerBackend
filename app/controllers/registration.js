@@ -1126,7 +1126,10 @@ exports.otpVerifyCounsellingWithSos = async (req, res) => {
         .send({ Status: "false", message: "Please provide mobilenumber" });
     }
 
-    const response = await leaderUsermaster.findOne({ mobilenumber });
+    const response = await leaderUsermaster.findOne({
+      mobilenumber: mobilenumber,
+      user_type: "counsellorWithSos"
+      });
 
     if (!response) {
       return res
@@ -1268,6 +1271,7 @@ exports.loginViaOtpleader = async (req, res) => {
     const user = await leaderUsermaster.findOne({
       mobilenumber,
       adminBlock: false,
+      user_type: "Counsellor"
     });
 
     if (user) {
@@ -6196,11 +6200,11 @@ exports.createSos = async (req, res) => {
       page_name: "Notification",
     };
 
-    // const response = await admin
-    //   .messaging()
-    //   .sendToDevice(tokens, { notification, data });
+    const response = await admin
+      .messaging()
+      .sendToDevice(tokens, { notification, data });
 
-    // console.log("{{{{{{{{{{{{{{{{{{{{{{",response);
+    console.log("{{{{{{{{{{{{{{{{{{{{{{",response);
     let result;
     if (req.file) {
       const attachment = req.file.filename;
@@ -6215,7 +6219,7 @@ exports.createSos = async (req, res) => {
         text: text,
         leaders: partnerDataUserIds,
         sosId: profileID,
-        // notificationCount: response.successCount,
+        notificationCount: response.successCount,
         types_of_danger: types_of_danger,
         local_Police_Helpline: local_Police_Helpline,
       });
@@ -6233,7 +6237,7 @@ exports.createSos = async (req, res) => {
         sosId: profileID,
         types_of_danger: types_of_danger,
         local_Police_Helpline: local_Police_Helpline,
-        // notificationCount: response.successCount,
+        notificationCount: response.successCount,
       });
       result = await sosSchemas.save();
       console.log(result);
@@ -6251,7 +6255,7 @@ exports.createSos = async (req, res) => {
       message: "Sos created successfully",
       partnerData,
       result,
-      // response,
+      response,
     });
   } catch (err) {
     console.log("Error:", err);
