@@ -189,7 +189,7 @@ exports.getAllTerritoryGovSchemes = async (req, res) => {
 
 exports.updateGovScheme = async (req, res) => {
   try {
-    const { _id } = req.params;
+    const { _id } = req.query;
     const { States_or_union_territories, policy_page_link, locationType } = req.body;
 
     const result = await Govscheme.findOneAndUpdate(
@@ -215,7 +215,7 @@ exports.updateGovScheme = async (req, res) => {
 
 exports.getGovSchemeById = async (req, res) => {
   try {
-    const { _id } = req.params;
+    const { _id } = req.query;
     const govScheme = await Govscheme.findOne({ _id: _id });
 
     if (!govScheme) {
@@ -235,7 +235,7 @@ exports.getGovSchemeById = async (req, res) => {
 
 exports.deleteGovScheme = async (req, res) => {
   try {
-    const { _id } = req.params;
+    const { _id } = req.query;
     const deletedGovScheme = await Govscheme.findOneAndDelete({ _id: _id });
 
     if (!deletedGovScheme) {

@@ -688,7 +688,7 @@ exports.registrationcitizenToCounselingSOS = async (req, res) => {
       },
       otp: true,
       profile: true,
-      sos_status: "pending", // Default SOS status
+      sos_status: "pending"
     });
     
 
@@ -1318,9 +1318,6 @@ exports.loginViaOtpleader = async (req, res) => {
 };
 
 
-
-
-
 exports.loginViaOtpConselingWithSOS = async (req, res) => {
   try {
     const { mobilenumber, token } = req.body;
@@ -1391,11 +1388,6 @@ exports.loginViaOtpConselingWithSOS = async (req, res) => {
       .send({ Status: "Error", message: "Something went wrong" });
   }
 };
-
-
-
-
-
 
 exports.requestCount = async (req, res) => {
   try {
